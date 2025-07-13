@@ -18,7 +18,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string',
+            'name' => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -27,7 +27,7 @@ class AuthController extends Controller
         }
 
         $credentials = [
-            'username' => $request->username,
+            'name' => $request->name,
             'password' => $request->password,
         ];
 
@@ -37,7 +37,7 @@ class AuthController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'username' => trans('auth.failed'),
+            'name' => trans('auth.failed'),
         ])->redirectTo(route('login'))->withInput($request->except('password'));
     }
 

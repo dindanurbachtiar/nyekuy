@@ -26,20 +26,18 @@
                 <div class="w-full max-w-sm space-y-6">
                     <form method="POST" action="{{ route('login') }}" class="space-y-6">
                         @csrf
-                        
                         <div class="space-y-2">
-                            <label for="username" class="text-sm font-medium text-gray-700">
+                            <label for="name" class="text-sm font-medium text-gray-700">
                                 Username
                             </label>
                             <input
-                                id="username"
-                                name="username"
+                                id="name"
+                                name="name"
                                 type="text"
-                                value="{{ old('username', 'admin') }}"
-                                class="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg focus:bg-white focus:ring-2 focus:ring-red-800 transition-all text-gray-900 @error('username') ring-2 ring-red-500 @enderror"
+                                class="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg focus:bg-white focus:ring-2 focus:ring-red-800 transition-all text-gray-900 @error('name') ring-2 ring-red-500 @enderror"
                                 required
                             />
-                            @error('username')
+                            @error('name')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
