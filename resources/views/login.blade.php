@@ -181,11 +181,12 @@
     <div class="main-content">
         <div class="login-card-container">
             {{-- Background Template Image --}}
-            <img src="{{ asset('images/template-bg.png') }}" alt="Background Template" class="bg-template-image" />
+            <img src="{{ asset('assets/images/template-bg.png') }}" alt="Background Template" class="bg-template-image" />
 
             {{-- NYEKUY Logo - Absolutely positioned --}}
             <div class="nyekuy-logo-section">
-                <img src="{{ asset('images/nyekuy-logo.png') }}" alt="NYEKUY" style="width: 400px; height: 100px; display: block; margin: auto;" />
+               <img src="{{ asset('assets/images/nyekuy-logo.png') }}" alt="NYEKUY" style="width: 400px; height: 100px; display: block; margin: auto;" />
+
             </div>
 
             <div class="inner-flex-container">
