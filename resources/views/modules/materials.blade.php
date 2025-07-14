@@ -368,7 +368,7 @@
         <!-- Header -->
         <div class="header">
             <div class="left-header">
-                <button class="back-btn" onclick="goBack()">
+                <button class="back-btn" onclick="window.history.back();">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h1 class="page-title">Bahan Baku</h1>
@@ -390,7 +390,6 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Table Header -->
             <div class="table-header">
                 <div>KODE_BAHAN</div>
                 <div>NAMA BAHAN</div>
@@ -398,89 +397,22 @@
                 <div>AKSI</div>
             </div>
 
-            <!-- Table Body -->
             <div id="materialsTable">
-                <div class="table-row">
-                    <div class="material-code">C001</div>
-                    <div class="material-name">Kerupuk Oren</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('C001')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">C002</div>
-                    <div class="material-name">Kerupuk Keong</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('C002')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">C003</div>
-                    <div class="material-name">Kerupuk Bunga</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('C003')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">C004</div>
-                    <div class="material-name">Kerupuk Inul</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('C004')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">C005</div>
-                    <div class="material-name">Batagor</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('C005')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">C006</div>
-                    <div class="material-name">Siomay</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('C006')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">C007</div>
-                    <div class="material-name">Tulang</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('C007')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">NC08</div>
-                    <div class="material-name">Ceker</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('NC08')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">NC09</div>
-                    <div class="material-name">Makaroni Spiral</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('NC09')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">NC10</div>
-                    <div class="material-name">Makaroni Kuning</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('NC10')">Edit</button></div>
-                </div>
-
-                <div class="table-row">
-                    <div class="material-code">NC11</div>
-                    <div class="material-name">Mi Golosor</div>
-                    <div class="material-qty">2 kg</div>
-                    <div><button class="edit-btn" onclick="editMaterial('NC11')">Edit</button></div>
-                </div>
+                @foreach($bahanBaku as $bahan)
+                    <div class="table-row">
+                        <div class="material-code">{{ $bahan->kode_bahan }}</div>
+                        <div class="material-name">{{ $bahan->nama_bahan }}</div>
+                        <div class="material-qty">{{ $bahan->stok }}</div>
+                        <div>
+                            <button class="edit-btn" onclick="openEditMaterialModal('{{ $bahan->kode_bahan }}')">Edit</button>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>
 
-    <!-- Add Material Modal -->
+    <!-- Modal Tambah -->
     <div class="modal-overlay" id="addMaterialModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -490,21 +422,21 @@
                 <h3 class="modal-title">Tambah Bahan Baku</h3>
             </div>
             <div class="modal-body">
-                <form id="addMaterialForm" onsubmit="submitNewMaterial(event)">
+                <form method="POST" action="{{ url('/bahan-baku') }}">
+                    @csrf
                     <div class="form-group">
                         <label class="form-label">Kode Bahan</label>
-                        <input type="text" class="form-input" id="materialCode" placeholder="Contoh: C009" required>
+                        <input type="text" class="form-input" name="kode_bahan" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Nama Bahan</label>
-                        <input type="text" class="form-input" id="materialName" placeholder="Contoh: Tahu Sumedang"
-                            required>
+                        <input type="text" class="form-input" name="nama_bahan" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">QTY</label>
-                        <input type="text" class="form-input" id="materialQty" placeholder="Contoh: 1 kg" required>
+                        <input type="text" class="form-input" name="stok" required>
                     </div>
 
                     <button type="submit" class="modal-submit-btn">TAMBAH</button>
@@ -513,12 +445,41 @@
         </div>
     </div>
 
-    <script>
-        function goBack() {
-            window.history.back();;
-        }
+    <!-- Modal Edit -->
+    <div class="modal-overlay" id="editMaterialModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-back-btn" onclick="closeEditMaterialModal()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h3 class="modal-title">Edit Bahan Baku</h3>
+            </div>
+            <div class="modal-body">
+                <form id="editMaterialForm" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label class="form-label">Kode Bahan</label>
+                        <input type="text" class="form-input" id="editMaterialCode" name="kode_bahan" readonly>
+                    </div>
 
-        // Modal Functions
+                    <div class="form-group">
+                        <label class="form-label">Nama Bahan</label>
+                        <input type="text" class="form-input" id="editMaterialName" name="nama_bahan" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">QTY</label>
+                        <input type="text" class="form-input" id="editMaterialQty" name="stok" required>
+                    </div>
+
+                    <button type="submit" class="modal-submit-btn">SIMPAN</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script>
         function openAddMaterialModal() {
             document.getElementById('addMaterialModal').classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -527,67 +488,42 @@
         function closeAddMaterialModal() {
             document.getElementById('addMaterialModal').classList.remove('active');
             document.body.style.overflow = 'auto';
-            document.getElementById('addMaterialForm').reset();
         }
 
-        function submitNewMaterial(event) {
-            event.preventDefault();
+        function openEditMaterialModal(kode) {
+            fetch(`/bahan-baku/get/${kode}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('editMaterialCode').value = data.kode_bahan;
+                    document.getElementById('editMaterialName').value = data.nama_bahan;
+                    document.getElementById('editMaterialQty').value = data.stok;
 
-            const materialCode = document.getElementById('materialCode').value;
-            const materialName = document.getElementById('materialName').value;
-            const materialQty = document.getElementById('materialQty').value;
-
-            // Validate if material code already exists
-            const existingCodes = Array.from(document.querySelectorAll('.material-code')).map(el => el.textContent);
-            if (existingCodes.includes(materialCode)) {
-                alert('Kode bahan sudah ada! Gunakan kode yang berbeda.');
-                return;
-            }
-
-            // Add new material to table
-            const tableBody = document.getElementById('materialsTable');
-            const newRow = document.createElement('div');
-            newRow.className = 'table-row';
-            newRow.innerHTML = `
-                <div class="material-code">${materialCode}</div>
-                <div class="material-name">${materialName}</div>
-                <div class="material-qty">${materialQty}</div>
-                <div><button class="edit-btn" onclick="editMaterial('${materialCode}')">Edit</button></div>
-            `;
-
-            tableBody.appendChild(newRow);
-
-            // Here you would typically send data to server
-            // fetch('/api/bahan-baku', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ code: materialCode, name: materialName, qty: materialQty })
-            // });
-
-            alert('Bahan baku berhasil ditambahkan!');
-            closeAddMaterialModal();
+                    const form = document.getElementById('editMaterialForm');
+                    form.action = `/bahan-baku/${data.kode_bahan}`;
+                    document.getElementById('editMaterialModal').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
         }
 
-        function editMaterial(code) {
-            alert(`Edit bahan baku dengan kode: ${code}`);
-            // Implement edit functionality
+        function closeEditMaterialModal() {
+            document.getElementById('editMaterialModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
 
-        // Close modal when clicking outside
-        document.getElementById('addMaterialModal').addEventListener('click', function (e) {
+        document.getElementById('editMaterialModal').addEventListener('click', function (e) {
             if (e.target === this) {
-                closeAddMaterialModal();
+                closeEditMaterialModal();
             }
         });
 
-        // Close modal with Escape key
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeAddMaterialModal();
+                closeEditMaterialModal();
             }
         });
 
-        // Search functionality
+        // Search
         document.getElementById('searchInput').addEventListener('input', function (e) {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('.table-row');
