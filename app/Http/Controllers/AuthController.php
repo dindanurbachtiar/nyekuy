@@ -18,7 +18,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -27,7 +27,7 @@ class AuthController extends Controller
         }
 
         $credentials = [
-            'name' => $request->name,
+            'username' => $request->username,
             'password' => $request->password,
         ];
 
@@ -36,9 +36,10 @@ class AuthController extends Controller
             return redirect()->intended('/dashboard');
         }
 
-        throw ValidationException::withMessages([
-            'name' => trans('auth.failed'),
-        ])->redirectTo(route('login'))->withInput($request->except('password'));
+        return back()
+    ->withErrors(['username' => trans('auth.failed')])
+    ->withInput($request->except('password'));
+ // ✅ Diperbaiki: tanpa redirectTo()
     }
 
     public function logout(Request $request)

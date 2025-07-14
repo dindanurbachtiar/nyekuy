@@ -60,11 +60,10 @@ return [
     */
 
     'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
-            'field' => 'name',
-        ],
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Pelayan::class,
+    ],
 
         // 'users' => [
         //     'driver' => 'database',

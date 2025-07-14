@@ -1,7 +1,7 @@
 <?php
-// routes/web.php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -9,28 +9,45 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within the "web" middleware group. Now create something great!
+| Di sini kamu mendefinisikan semua route untuk aplikasi.
+| File ini dimuat oleh RouteServiceProvider.
 |
 */
 
-// Rute untuk menampilkan form login
+// 🔐 Halaman Login
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-
-// Rute untuk menangani proses login (POST request)
 Route::post('/login', [AuthController::class, 'login']);
 
-// Rute yang memerlukan autentikasi (misal: dashboard)
+// 🔐 Group route yang membutuhkan autentikasi (harus login)
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard'); // Pastikan Anda memiliki file resources/views/dashboard.blade.php
-    })->name('dashboard');
 
-    // Rute untuk logout
+    // 🏠 Dashboard utama
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // 📦 Modul-modul lain
+    Route::prefix('modules')->group(function () {
+
+        // Modul Pemesanan
+        Route::get('/orders', function () {
+            return view('modules.orders');
+        })->name('orders.index');
+
+        // Modul Bahan Baku
+        Route::get('/materials', function () {
+            return view('modules.materials');
+        })->name('materials.index');
+
+        // Modul Laporan Pendapatan
+        Route::get('/reports', function () {
+            return view('modules.reports');
+        })->name('reports.index');
+    });
+
+    // 🔓 Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-// Redirect root URL ke halaman login
+// 🔁 Redirect dari root ke login
 Route::get('/', function () {
     return redirect()->route('login');
 });
