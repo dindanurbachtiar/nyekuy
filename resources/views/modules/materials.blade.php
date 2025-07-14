@@ -1,31 +1,609 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
 
-@section('title', 'Bahan Baku')
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahan Baku - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-@section('content')
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-boxes text-warning me-2"></i>Bahan Baku</h2>
-        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Kembali ke Dashboard
-        </a>
-    </div>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Manajemen Bahan Baku</h5>
-                    <p class="text-muted">Kelola inventori dan stok bahan baku.</p>
-                    
-                    <!-- Placeholder content -->
-                    <div class="text-center py-5">
-                        <i class="fas fa-warehouse fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Modul Bahan Baku akan dikembangkan di sini</p>
-                    </div>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .left-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #f0f0f0;
+            transform: translateX(-2px);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .right-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .add-btn {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: #f8f9fa;
+            border-color: #8B1538;
+            color: #8B1538;
+        }
+
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #8B1538;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #e9ecef;
+            padding: 15px 20px;
+            display: grid;
+            grid-template-columns: 200px 1fr 150px 100px;
+            gap: 20px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .table-row {
+            padding: 15px 20px;
+            display: grid;
+            grid-template-columns: 200px 1fr 150px 100px;
+            gap: 20px;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.3s ease;
+        }
+
+        .table-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .material-code {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #495057;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .material-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .material-qty {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .edit-btn {
+            background: #8B1538;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn:hover {
+            background: #A91B47;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: #f8f9fa;
+            padding: 20px 25px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-back-btn {
+            width: 35px;
+            height: 35px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-input:focus {
+            border-color: #8B1538;
+            background: white;
+        }
+
+        .modal-submit-btn {
+            width: 100%;
+            background: #8B1538;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .modal-submit-btn:hover {
+            background: #A91B47;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+
+            .search-container {
+                width: 250px;
+            }
+
+            .table-header,
+            .table-row {
+                grid-template-columns: 150px 1fr 120px 80px;
+                gap: 15px;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .right-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .search-container {
+                width: 200px;
+            }
+
+            .table-header,
+            .table-row {
+                grid-template-columns: 120px 1fr 100px 70px;
+                gap: 10px;
+                font-size: 12px;
+            }
+
+            .material-code {
+                font-size: 12px;
+                padding: 6px 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="left-header">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h1 class="page-title">Bahan Baku</h1>
+            </div>
+
+            <div class="right-header">
+                <button class="add-btn" onclick="openAddMaterialModal()">
+                    <i class="fas fa-plus"></i>
+                </button>
+
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Cari Kode/Nama Bahan" id="searchInput">
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Table Header -->
+            <div class="table-header">
+                <div>KODE_BAHAN</div>
+                <div>NAMA BAHAN</div>
+                <div>QTY</div>
+                <div>AKSI</div>
+            </div>
+
+            <!-- Table Body -->
+            <div id="materialsTable">
+                <div class="table-row">
+                    <div class="material-code">C001</div>
+                    <div class="material-name">Kerupuk Oren</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('C001')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">C002</div>
+                    <div class="material-name">Kerupuk Keong</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('C002')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">C003</div>
+                    <div class="material-name">Kerupuk Bunga</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('C003')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">C004</div>
+                    <div class="material-name">Kerupuk Inul</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('C004')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">C005</div>
+                    <div class="material-name">Batagor</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('C005')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">C006</div>
+                    <div class="material-name">Siomay</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('C006')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">C007</div>
+                    <div class="material-name">Tulang</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('C007')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">NC08</div>
+                    <div class="material-name">Ceker</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('NC08')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">NC09</div>
+                    <div class="material-name">Makaroni Spiral</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('NC09')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">NC10</div>
+                    <div class="material-name">Makaroni Kuning</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('NC10')">Edit</button></div>
+                </div>
+
+                <div class="table-row">
+                    <div class="material-code">NC11</div>
+                    <div class="material-name">Mi Golosor</div>
+                    <div class="material-qty">2 kg</div>
+                    <div><button class="edit-btn" onclick="editMaterial('NC11')">Edit</button></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-@endsection
+
+    <!-- Add Material Modal -->
+    <div class="modal-overlay" id="addMaterialModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-back-btn" onclick="closeAddMaterialModal()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h3 class="modal-title">Tambah Bahan Baku</h3>
+            </div>
+            <div class="modal-body">
+                <form id="addMaterialForm" onsubmit="submitNewMaterial(event)">
+                    <div class="form-group">
+                        <label class="form-label">Kode Bahan</label>
+                        <input type="text" class="form-input" id="materialCode" placeholder="Contoh: C009" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Nama Bahan</label>
+                        <input type="text" class="form-input" id="materialName" placeholder="Contoh: Tahu Sumedang"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">QTY</label>
+                        <input type="text" class="form-input" id="materialQty" placeholder="Contoh: 1 kg" required>
+                    </div>
+
+                    <button type="submit" class="modal-submit-btn">TAMBAH</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();;
+        }
+
+        // Modal Functions
+        function openAddMaterialModal() {
+            document.getElementById('addMaterialModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddMaterialModal() {
+            document.getElementById('addMaterialModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            document.getElementById('addMaterialForm').reset();
+        }
+
+        function submitNewMaterial(event) {
+            event.preventDefault();
+
+            const materialCode = document.getElementById('materialCode').value;
+            const materialName = document.getElementById('materialName').value;
+            const materialQty = document.getElementById('materialQty').value;
+
+            // Validate if material code already exists
+            const existingCodes = Array.from(document.querySelectorAll('.material-code')).map(el => el.textContent);
+            if (existingCodes.includes(materialCode)) {
+                alert('Kode bahan sudah ada! Gunakan kode yang berbeda.');
+                return;
+            }
+
+            // Add new material to table
+            const tableBody = document.getElementById('materialsTable');
+            const newRow = document.createElement('div');
+            newRow.className = 'table-row';
+            newRow.innerHTML = `
+                <div class="material-code">${materialCode}</div>
+                <div class="material-name">${materialName}</div>
+                <div class="material-qty">${materialQty}</div>
+                <div><button class="edit-btn" onclick="editMaterial('${materialCode}')">Edit</button></div>
+            `;
+
+            tableBody.appendChild(newRow);
+
+            // Here you would typically send data to server
+            // fetch('/api/bahan-baku', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ code: materialCode, name: materialName, qty: materialQty })
+            // });
+
+            alert('Bahan baku berhasil ditambahkan!');
+            closeAddMaterialModal();
+        }
+
+        function editMaterial(code) {
+            alert(`Edit bahan baku dengan kode: ${code}`);
+            // Implement edit functionality
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('addMaterialModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeAddMaterialModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeAddMaterialModal();
+            }
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.table-row');
+
+            rows.forEach(row => {
+                const code = row.querySelector('.material-code').textContent.toLowerCase();
+                const name = row.querySelector('.material-name').textContent.toLowerCase();
+
+                if (code.includes(searchTerm) || name.includes(searchTerm)) {
+                    row.style.display = 'grid';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
