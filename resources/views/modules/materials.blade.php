@@ -365,12 +365,12 @@
 
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <div class="left-header">
-                <button class="back-btn" onclick="window.history.back();">
+                <button class="back-btn" onclick="window.location.href='{{ route('dashboard') }}'">
                     <i class="fas fa-arrow-left"></i>
                 </button>
+
                 <h1 class="page-title">Bahan Baku</h1>
             </div>
 
@@ -378,17 +378,13 @@
                 <button class="add-btn" onclick="openAddMaterialModal()">
                     <i class="fas fa-plus"></i>
                 </button>
-
                 <div class="search-container">
                     <input type="text" class="search-input" placeholder="Cari Kode/Nama Bahan" id="searchInput">
-                    <button class="search-btn">
-                        <i class="fas fa-search"></i>
-                    </button>
+                    <button class="search-btn"><i class="fas fa-search"></i></button>
                 </div>
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content">
             <div class="table-header">
                 <div>KODE_BAHAN</div>
@@ -396,7 +392,6 @@
                 <div>QTY</div>
                 <div>AKSI</div>
             </div>
-
             <div id="materialsTable">
                 @foreach($bahanBaku as $bahan)
                     <div class="table-row">
@@ -412,13 +407,11 @@
         </div>
     </div>
 
-    <!-- Modal Tambah -->
+    {{-- Modal Tambah --}}
     <div class="modal-overlay" id="addMaterialModal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="modal-back-btn" onclick="closeAddMaterialModal()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
+                <button class="modal-back-btn" onclick="closeAddMaterialModal()"><i class="fas fa-arrow-left"></i></button>
                 <h3 class="modal-title">Tambah Bahan Baku</h3>
             </div>
             <div class="modal-body">
@@ -428,57 +421,55 @@
                         <label class="form-label">Kode Bahan</label>
                         <input type="text" class="form-input" name="kode_bahan" required>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">Nama Bahan</label>
                         <input type="text" class="form-input" name="nama_bahan" required>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">QTY</label>
                         <input type="text" class="form-input" name="stok" required>
                     </div>
-
                     <button type="submit" class="modal-submit-btn">TAMBAH</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Modal Edit -->
+    {{-- Modal Edit --}}
     <div class="modal-overlay" id="editMaterialModal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="modal-back-btn" onclick="closeEditMaterialModal()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
+                <button class="modal-back-btn" onclick="closeEditMaterialModal()"><i class="fas fa-arrow-left"></i></button>
                 <h3 class="modal-title">Edit Bahan Baku</h3>
             </div>
             <div class="modal-body">
                 <form id="editMaterialForm" method="POST">
                     @csrf
+                    @method('PUT')
                     <div class="form-group">
                         <label class="form-label">Kode Bahan</label>
                         <input type="text" class="form-input" id="editMaterialCode" name="kode_bahan" readonly>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">Nama Bahan</label>
                         <input type="text" class="form-input" id="editMaterialName" name="nama_bahan" required>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">QTY</label>
                         <input type="text" class="form-input" id="editMaterialQty" name="stok" required>
                     </div>
-
                     <button type="submit" class="modal-submit-btn">SIMPAN</button>
+                </form>
+                <form id="deleteMaterialForm" method="POST" style="margin-top: 10px;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="modal-submit-btn" style="background-color: crimson;">HAPUS</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Script -->
+    {{-- Script --}}
     <script>
         function openAddMaterialModal() {
             document.getElementById('addMaterialModal').classList.add('active');
@@ -498,8 +489,9 @@
                     document.getElementById('editMaterialName').value = data.nama_bahan;
                     document.getElementById('editMaterialQty').value = data.stok;
 
-                    const form = document.getElementById('editMaterialForm');
-                    form.action = `/bahan-baku/${data.kode_bahan}`;
+                    document.getElementById('editMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
+                    document.getElementById('deleteMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
+
                     document.getElementById('editMaterialModal').classList.add('active');
                     document.body.style.overflow = 'hidden';
                 });
@@ -510,12 +502,7 @@
             document.body.style.overflow = 'auto';
         }
 
-        document.getElementById('editMaterialModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeEditMaterialModal();
-            }
-        });
-
+        // Escape
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeAddMaterialModal();
@@ -527,19 +514,31 @@
         document.getElementById('searchInput').addEventListener('input', function (e) {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('.table-row');
-
             rows.forEach(row => {
                 const code = row.querySelector('.material-code').textContent.toLowerCase();
                 const name = row.querySelector('.material-name').textContent.toLowerCase();
-
-                if (code.includes(searchTerm) || name.includes(searchTerm)) {
-                    row.style.display = 'grid';
-                } else {
-                    row.style.display = 'none';
-                }
+                row.style.display = code.includes(searchTerm) || name.includes(searchTerm) ? 'grid' : 'none';
             });
         });
     </script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: '{{ session('success') }}',
+                    confirmButtonColor: '#8B1538'
+                });
+            @elseif(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#8B1538'
+                });
+            @endif
+        </script>
 
+</body>
 </html>

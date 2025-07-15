@@ -53,14 +53,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// View bahan baku
+// Tambahkan di dalam middleware auth
 Route::get('/materials', [BahanBakuController::class, 'index'])->name('materials.index');
-
-// Tambah data
 Route::post('/bahan-baku', [BahanBakuController::class, 'store']);
-
-// Update data
-Route::post('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'update']);
-
-// Ambil satu data untuk modal edit
+Route::put('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'update']);
 Route::get('/bahan-baku/get/{kode_bahan}', [BahanBakuController::class, 'getOne']);
+Route::delete('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'destroy']);
+

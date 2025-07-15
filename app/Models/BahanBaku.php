@@ -10,7 +10,7 @@ class BahanBaku extends Model
     protected $primaryKey = 'kode_bahan';
     public $incrementing = false; // kode bukan auto increment
     protected $keyType = 'string';
-    protected $fillable = ['kode_bahan', 'nama_bahan', 'qty'];
+    protected $fillable = ['kode_bahan', 'nama_bahan', 'stok'];
     public $timestamps = false;
 
 }
