@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BahanBakuController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,4 +60,20 @@ Route::post('/bahan-baku', [BahanBakuController::class, 'store']);
 Route::put('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'update']);
 Route::get('/bahan-baku/get/{kode_bahan}', [BahanBakuController::class, 'getOne']);
 Route::delete('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'destroy']);
+
+Route::get('/orders', [OrderController::class, 'index'])->name('payment.form');
+// Menampilkan form pembayaran
+Route::get('/payment', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
+
+// Menghitung kembalian (AJAX)
+Route::post('/payment/calculate-change', [PaymentController::class, 'calculateChange'])->name('payment.calculate');
+
+// Memproses pembayaran
+Route::post('/payment/process', [PaymentController::class, 'processPayment'])->name('payment.process');
+
+// Menampilkan halaman sukses
+Route::get('/payment/success', [PaymentController::class, 'paymentSuccess'])->name('payment.success');
+
+Route::get('/modules/orders', [OrderController::class, 'index'])->name('orders.index');
+
 

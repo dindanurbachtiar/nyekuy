@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
 {
-    public function showPaymentForm()
+    public function showPaymentForm(Request $request)
     {
         // Hanya metode pembayaran tunai
         $paymentMethods = [
@@ -22,7 +22,7 @@ class PaymentController extends Controller
         $quickAmounts = [10000, 20000, 50000, 100000];
         
         // Simulasi total pesanan - dalam implementasi nyata bisa dari session/database
-        $orderTotal = 9000; // Total pesanan
+         $orderTotal = $request->input('total', 0);
 
         return view('payment.form', compact('paymentMethods', 'quickAmounts', 'orderTotal'));
     }
