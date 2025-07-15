@@ -2,9 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BahanBakuController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,28 +25,28 @@ Route::middleware('auth')->group(function () {
     
     // 📦 Modul-modul lain
     Route::prefix('modules')->group(function () {
-        // Modul Pemesanan - Updated dengan OrderController
-        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-        Route::put('/orders/{kode_menu}', [OrderController::class, 'update'])->name('orders.update');
-        Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
-        
+
+        // Modul Pemesanan
+        Route::get('/orders', function () {
+            return view('modules.orders');
+        })->name('orders.index');
+
         // Modul Bahan Baku
         Route::get('/materials', function () {
             return view('modules.materials');
         })->name('materials.index');
-        
+
         // Modul Laporan Pendapatan
         Route::get('/reports', function () {
             return view('modules.reports');
         })->name('reports.index');
     });
-    
+
     // 🔓 Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-// 🔁 Redirect dari root ke login
+// 🔁 Redirect dari root ke halaman login jika belum login
 Route::get('/', function () {
     return redirect()->route('login');
 });

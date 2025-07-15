@@ -597,7 +597,10 @@
                         </div>
                     </div>
 
-                    <button class="order-btn" onclick="processOrder()">Pesan</button>
+                    <form id="orderForm" method="GET" action="{{ route('payment.form') }}">
+                        <input type="hidden" name="total" id="hiddenTotal">
+                        <button type="submit" class="order-btn">Pesan</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -792,43 +795,18 @@
                 return;
             }
 
-            const orderData = {
-                nama_pelanggan: customerName,
-                items: orderItems.map(item => ({
-                    kode_menu: item.code,
-                    nama_menu: item.name,
-                    quantity: item.quantity
-                })),
-                total: total
-            };
+            // Process order logic here
+            alert(`Pesanan berhasil! Total: Rp. ${total.toLocaleString()}`);
 
-            // Send order to server
-            fetch('/modules/orders/process', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(`Pesanan berhasil! Kode Transaksi: ${data.kode_transaksi}`);
-                    
-                    // Reset form
-                    orderItems = [];
-                    updateOrderTable();
-                    updateTotal();
-                    document.getElementById('customerName').value = '';
-                } else {
-                    alert('Gagal memproses pesanan!');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat memproses pesanan!');
-            });
+            // Reset form
+            orderItems = [];
+            updateOrderTable();
+            updateTotal();
+        }
+
+        function selectCustomer() {
+            // Open customer selection modal/page
+            alert('Pilih customer');
         }
 
         // Modal Functions
