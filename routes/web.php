@@ -2,17 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Di sini kamu mendefinisikan semua route untuk aplikasi.
-| File ini dimuat oleh RouteServiceProvider.
-|
-*/
 
 // 🔐 Halaman Login
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -26,28 +17,37 @@ Route::middleware('auth')->group(function () {
 
     // 📦 Modul-modul lain
     Route::prefix('modules')->group(function () {
-
-        // Modul Pemesanan
         Route::get('/orders', function () {
             return view('modules.orders');
         })->name('orders.index');
 
-        // Modul Bahan Baku
         Route::get('/materials', function () {
             return view('modules.materials');
         })->name('materials.index');
 
-        // Modul Laporan Pendapatan
         Route::get('/reports', function () {
             return view('modules.reports');
         })->name('reports.index');
     });
 
+    // 💳 Modul Pembayaran
+    Route::get('/', function () {
+        return redirect()->route('payment.form');
+    });
+
+    Route::prefix('payment')->name('payment.')->group(function () {
+    Route::get('/', [PaymentController::class, 'showPaymentForm'])->name('form');
+    Route::post('/process', [PaymentController::class, 'processPayment'])->name('process');
+    Route::post('/calculate-change', [PaymentController::class, 'calculateChange'])->name('calculate.change');
+    Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
+});
+
+
     // 🔓 Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-// 🔁 Redirect dari root ke login
+// 🔁 Redirect dari root ke halaman login jika belum login
 Route::get('/', function () {
     return redirect()->route('login');
 });

@@ -620,7 +620,10 @@
                         </div>
                     </div>
 
-                    <button class="order-btn" onclick="processOrder()">Pesan</button>
+                    <form id="orderForm" method="GET" action="{{ route('payment.form') }}">
+                        <input type="hidden" name="total" id="hiddenTotal">
+                        <button type="submit" class="order-btn">Pesan</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -752,14 +755,15 @@
                 return;
             }
 
-            // Process order logic here
-            alert(`Pesanan berhasil! Total: Rp. ${total.toLocaleString()}`);
+            // Set total ke input hidden
+            document.getElementById('hiddenTotal').value = total;
 
-            // Reset form
-            orderItems = [];
-            updateOrderTable();
-            updateTotal();
+            // Submit form ke halaman pembayaran
+            document.getElementById('orderForm').submit();
         }
+
+
+
 
         function selectCustomer() {
             // Open customer selection modal/page
