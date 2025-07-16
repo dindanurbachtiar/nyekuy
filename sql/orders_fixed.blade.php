@@ -1066,6 +1066,75 @@
         // Initialize
         updateTotal();
     </script>
+
+<!-- Modal Tambah Menu -->
+<div id="addMenuModal" class="modal" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:10px; width:400px;">
+        <h3>Tambah Menu</h3>
+        <form method="POST" action="/menus">
+            @csrf
+            <label>Nama Menu</label>
+            <input type="text" name="name" class="form-control" required><br>
+            <label>Harga</label>
+            <input type="number" name="price" class="form-control" required><br>
+            <label>Kategori</label>
+            <input type="text" name="category" class="form-control"><br>
+            <button type="submit" class="edit-btn">Simpan</button>
+            <button type="button" onclick="closeModal('addMenuModal')" class="edit-btn" style="background:#aaa;">Batal</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Edit Menu -->
+<div id="editMenuModal" class="modal" style="display:none; position: fixed; top: 0; left: 0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:10px; width:400px;">
+        <h3>Edit Menu</h3>
+        <form method="POST" id="editMenuForm">
+            @csrf
+            @method('PUT')
+            <label>Nama Menu</label>
+            <input type="text" name="name" id="edit-name" class="form-control" required><br>
+            <label>Harga</label>
+            <input type="number" name="price" id="edit-price" class="form-control" required><br>
+            <label>Kategori</label>
+            <input type="text" name="category" id="edit-category" class="form-control"><br>
+            <button type="submit" class="edit-btn">Update</button>
+            <button type="button" onclick="closeModal('editMenuModal')" class="edit-btn" style="background:#aaa;">Batal</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+// Trigger tombol tambah
+document.querySelector('.add-btn')?.addEventListener('click', function() {
+    openModal('addMenuModal');
+});
+
+// Trigger tombol edit
+document.querySelectorAll('.edit-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const menuId = this.dataset.id;
+        const menuName = this.dataset.name;
+        const menuPrice = this.dataset.price;
+        const menuCategory = this.dataset.category;
+
+        document.getElementById('edit-name').value = menuName;
+        document.getElementById('edit-price').value = menuPrice;
+        document.getElementById('edit-category').value = menuCategory;
+        document.getElementById('editMenuForm').action = '/menus/' + menuId;
+
+        openModal('editMenuModal');
+    });
+});
+</script>
+
 </body>
 
 </html>
