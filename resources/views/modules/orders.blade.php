@@ -540,16 +540,18 @@
                     <tbody>
                         @if(isset($menus) && count($menus) > 0)
                             @foreach($menus as $menu)
-                            <tr onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }})">
-                                <td>{{ $menu->nama_menu }}</td>
-                                <td>{{ $menu->kode_menu }}</td>
-                                <td>Rp. {{ number_format($menu->harga, 0, ',', '.') }}</td>
-                                <td>
-                                    <button class="edit-btn" onclick="event.stopPropagation(); editMenu('{{ $menu->kode_menu }}', '{{ $menu->nama_menu }}', {{ $menu->harga }})">
-                                        Edit
-                                    </button>
-                                </td>
-                            </tr>
+                                <tr
+                                    onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }})">
+                                    <td>{{ $menu->nama_menu }}</td>
+                                    <td>{{ $menu->kode_menu }}</td>
+                                    <td>Rp. {{ number_format($menu->harga, 0, ',', '.') }}</td>
+                                    <td>
+                                        <button class="edit-btn"
+                                            onclick="event.stopPropagation(); editMenu('{{ $menu->kode_menu }}', '{{ $menu->nama_menu }}', {{ $menu->harga }})">
+                                            Edit
+                                        </button>
+                                    </td>
+                                </tr>
                             @endforeach
                         @else
                             <tr>
@@ -598,9 +600,10 @@
                     </div>
 
                     <form id="orderForm" method="GET" action="{{ route('payment.form') }}">
-                        <input type="hidden" name="total" id="hiddenTotal">
+                        <input type="hidden" name="order_total" id="hiddenTotal">
                         <button type="submit" class="order-btn">Pesan</button>
                     </form>
+
                 </div>
             </div>
         </div>
@@ -630,7 +633,8 @@
 
                     <div class="form-group">
                         <label class="form-label">Harga</label>
-                        <input type="number" class="form-input" id="menuPrice" placeholder="Contoh: 2000" required min="0">
+                        <input type="number" class="form-input" id="menuPrice" placeholder="Contoh: 2000" required
+                            min="0">
                     </div>
 
                     <button type="submit" class="modal-submit-btn">Tambah</button>
@@ -652,7 +656,7 @@
                 <div id="editAlertContainer"></div>
                 <form id="editMenuForm" onsubmit="submitEditMenu(event)">
                     <input type="hidden" id="editMenuCode">
-                    
+
                     <div class="form-group">
                         <label class="form-label">Nama Menu</label>
                         <input type="text" class="form-input" id="editMenuName" required>
@@ -677,9 +681,9 @@
         // Update date in real-time
         function updateDateTime() {
             const now = new Date();
-            const options = { 
-                day: 'numeric', 
-                month: 'long', 
+            const options = {
+                day: 'numeric',
+                month: 'long',
                 year: 'numeric'
             };
             document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', options);
@@ -699,12 +703,12 @@
                 code,
                 price
             };
-            
+
             // Remove previous selection
             document.querySelectorAll('.menu-table tbody tr').forEach(row => {
                 row.classList.remove('selected');
             });
-            
+
             // Highlight selected row
             event.currentTarget.classList.add('selected');
         }
@@ -728,11 +732,12 @@
 
             // Check if item already exists in order
             const existingItemIndex = orderItems.findIndex(item => item.code === selectedMenu.code);
-            
+
             if (existingItemIndex !== -1) {
                 // Update existing item
                 orderItems[existingItemIndex].quantity += quantity;
-                orderItems[existingItemIndex].total = orderItems[existingItemIndex].price * orderItems[existingItemIndex].quantity;
+                orderItems[existingItemIndex].total = orderItems[existingItemIndex].price * orderItems[existingItemIndex]
+                    .quantity;
             } else {
                 // Add new item
                 orderItems.push({
@@ -780,11 +785,13 @@
         function updateTotal() {
             total = orderItems.reduce((sum, item) => sum + item.total, 0);
             document.getElementById('totalAmount').textContent = `Rp. ${total.toLocaleString('id-ID')}`;
+            document.getElementById('hiddenTotal').value = total;
+
         }
 
         function processOrder() {
             const customerName = document.getElementById('customerName').value.trim();
-            
+
             if (!customerName) {
                 alert('Silakan masukkan nama pelanggan!');
                 return;
@@ -814,24 +821,24 @@
                 },
                 body: JSON.stringify(orderData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(`Pesanan berhasil! Kode Transaksi: ${data.kode_transaksi}`);
-                    
-                    // Reset form
-                    orderItems = [];
-                    updateOrderTable();
-                    updateTotal();
-                    document.getElementById('customerName').value = '';
-                } else {
-                    alert('Gagal memproses pesanan!');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat memproses pesanan!');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Pesanan berhasil! Kode Transaksi: ${data.kode_transaksi}`);
+
+                        // Reset form
+                        orderItems = [];
+                        updateOrderTable();
+                        updateTotal();
+                        document.getElementById('customerName').value = '';
+                    } else {
+                        alert('Gagal memproses pesanan!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat memproses pesanan!');
+                });
         }
 
         // Modal Functions
@@ -869,13 +876,13 @@
         function showAlert(message, type = 'success', containerId = 'alertContainer') {
             const alertContainer = document.getElementById(containerId);
             const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-            
+
             alertContainer.innerHTML = `
                 <div class="alert ${alertClass}">
                     ${message}
                 </div>
             `;
-            
+
             // Auto hide after 3 seconds
             setTimeout(() => {
                 alertContainer.innerHTML = '';
@@ -900,14 +907,14 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Add new menu to table
-                    const tbody = document.querySelector('#menuTable tbody');
-                    const newRow = tbody.insertRow();
-                    newRow.onclick = () => selectMenu(data.data.nama_menu, data.data.kode_menu, data.data.harga);
-                    newRow.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Add new menu to table
+                        const tbody = document.querySelector('#menuTable tbody');
+                        const newRow = tbody.insertRow();
+                        newRow.onclick = () => selectMenu(data.data.nama_menu, data.data.kode_menu, data.data.harga);
+                        newRow.innerHTML = `
                         <td>${data.data.nama_menu}</td>
                         <td>${data.data.kode_menu}</td>
                         <td>Rp. ${data.data.harga.toLocaleString('id-ID')}</td>
@@ -918,20 +925,20 @@
                         </td>
                     `;
 
-                    showAlert(data.message, 'success');
-                    
-                    // Close modal after 2 seconds
-                    setTimeout(() => {
-                        closeAddMenuModal();
-                    }, 2000);
-                } else {
-                    showAlert('Gagal menambahkan menu!', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('Terjadi kesalahan saat menambahkan menu!', 'error');
-            });
+                        showAlert(data.message, 'success');
+
+                        // Close modal after 2 seconds
+                        setTimeout(() => {
+                            closeAddMenuModal();
+                        }, 2000);
+                    } else {
+                        showAlert('Gagal menambahkan menu!', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Terjadi kesalahan saat menambahkan menu!', 'error');
+                });
         }
 
         function submitEditMenu(event) {
@@ -952,40 +959,41 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update menu in table
-                    const rows = document.querySelectorAll('#menuTable tbody tr');
-                    rows.forEach(row => {
-                        const kodeCell = row.cells[1];
-                        if (kodeCell && kodeCell.textContent === kodeMenu) {
-                            row.cells[0].textContent = data.data.nama_menu;
-                            row.cells[2].textContent = `Rp. ${data.data.harga.toLocaleString('id-ID')}`;
-                            row.onclick = () => selectMenu(data.data.nama_menu, data.data.kode_menu, data.data.harga);
-                            
-                            const editBtn = row.querySelector('.edit-btn');
-                            editBtn.onclick = (e) => {
-                                e.stopPropagation();
-                                editMenu(data.data.kode_menu, data.data.nama_menu, data.data.harga);
-                            };
-                        }
-                    });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update menu in table
+                        const rows = document.querySelectorAll('#menuTable tbody tr');
+                        rows.forEach(row => {
+                            const kodeCell = row.cells[1];
+                            if (kodeCell && kodeCell.textContent === kodeMenu) {
+                                row.cells[0].textContent = data.data.nama_menu;
+                                row.cells[2].textContent = `Rp. ${data.data.harga.toLocaleString('id-ID')}`;
+                                row.onclick = () => selectMenu(data.data.nama_menu, data.data.kode_menu, data
+                                    .data.harga);
 
-                    showAlert(data.message, 'success', 'editAlertContainer');
-                    
-                    // Close modal after 2 seconds
-                    setTimeout(() => {
-                        closeEditMenuModal();
-                    }, 2000);
-                } else {
-                    showAlert('Gagal mengupdate menu!', 'error', 'editAlertContainer');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('Terjadi kesalahan saat mengupdate menu!', 'error', 'editAlertContainer');
-            });
+                                const editBtn = row.querySelector('.edit-btn');
+                                editBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    editMenu(data.data.kode_menu, data.data.nama_menu, data.data.harga);
+                                };
+                            }
+                        });
+
+                        showAlert(data.message, 'success', 'editAlertContainer');
+
+                        // Close modal after 2 seconds
+                        setTimeout(() => {
+                            closeEditMenuModal();
+                        }, 2000);
+                    } else {
+                        showAlert('Gagal mengupdate menu!', 'error', 'editAlertContainer');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Terjadi kesalahan saat mengupdate menu!', 'error', 'editAlertContainer');
+                });
         }
 
         // Search functionality with AJAX
@@ -1005,7 +1013,8 @@
                             if (menus.length > 0) {
                                 menus.forEach(menu => {
                                     const row = tbody.insertRow();
-                                    row.onclick = () => selectMenu(menu.nama_menu, menu.kode_menu, menu.harga);
+                                    row.onclick = () => selectMenu(menu.nama_menu, menu
+                                        .kode_menu, menu.harga);
                                     row.innerHTML = `
                                         <td>${menu.nama_menu}</td>
                                         <td>${menu.kode_menu}</td>
