@@ -9,31 +9,21 @@ class PaymentController extends Controller
 {
     public function showPaymentForm(Request $request)
     {
-        // Hanya metode pembayaran tunai
-        $paymentMethods = [
-            [
-                'id' => 'cash',
-                'name' => 'Tunai',
-                'icon' => 'money-bill-wave',
-                'color' => 'green'
-            ]
-        ];
+        $orderTotal = $request->input('order_total');
 
-        $quickAmounts = [10000, 20000, 50000, 100000];
-        
-        // Simulasi total pesanan - dalam implementasi nyata bisa dari session/database
-         $orderTotal = $request->input('total', 0);
+        $quickAmounts = [10000, 20000, 50000, 100000]; // bisa custom
 
-        return view('payment.form', compact('paymentMethods', 'quickAmounts', 'orderTotal'));
+        return view('payment.form', compact('orderTotal', 'quickAmounts'));
     }
+
 
     public function calculateChange(Request $request)
     {
         $orderTotal = $request->order_total;
         $paidAmount = $request->paid_amount;
-        
+
         $change = $paidAmount - $orderTotal;
-        
+
         return response()->json([
             'change' => $change,
             'formatted_change' => number_format($change, 0, ',', '.'),
@@ -86,7 +76,7 @@ class PaymentController extends Controller
     {
         // Simulasi proses pembayaran tunai
         // Dalam implementasi nyata, ini bisa menyimpan ke database
-        
+
         return [
             'success' => true,
             'transaction_id' => $paymentData['transaction_id'],
@@ -97,7 +87,7 @@ class PaymentController extends Controller
     public function paymentSuccess()
     {
         $paymentData = session('payment_data');
-        
+
         if (!$paymentData) {
             return redirect()->route('payment.form');
         }
