@@ -117,4 +117,23 @@ class OrderController extends Controller
             'kode_transaksi' => $kodeTransaksi
         ]);
     }
+
+    public function destroy($kode_menu)
+    {
+        try {
+            $menu = Menu::findOrFail($kode_menu);
+            $menu->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus menu'
+            ], 500);
+        }
+    }
+
 }

@@ -330,15 +330,37 @@
         }
 
         .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #b02a37;
+        }
+
+        td button.edit-btn {
             background: #8B1538;
             color: white;
             border: none;
-            width: 25px;
-            height: 25px;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 6px;
             font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
+
+        td button.edit-btn:hover {
+            background: #A91B47;
+        }
+
 
         /* Modal Styles */
         .modal-overlay {
@@ -540,7 +562,7 @@
                     <tbody>
                         @if(isset($menus) && count($menus) > 0)
                             @foreach($menus as $menu)
-                                <tr
+                                <tr data-kode="{{ $menu->kode_menu }}" 
                                     onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }})">
                                     <td>{{ $menu->nama_menu }}</td>
                                     <td>{{ $menu->kode_menu }}</td>
@@ -549,6 +571,10 @@
                                         <button class="edit-btn"
                                             onclick="event.stopPropagation(); editMenu('{{ $menu->kode_menu }}', '{{ $menu->nama_menu }}', {{ $menu->harga }})">
                                             Edit
+                                        </button>
+                                        <button class="delete-btn"
+                                            onclick="event.stopPropagation(); confirmDelete('{{ $menu->kode_menu }}')">
+                                            Hapus
                                         </button>
                                     </td>
                                 </tr>
@@ -561,6 +587,7 @@
                             </tr>
                         @endif
                     </tbody>
+
                 </table>
             </div>
 
@@ -673,6 +700,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let selectedMenu = null;
         let orderItems = [];
@@ -1065,6 +1093,46 @@
 
         // Initialize
         updateTotal();
+
+        // Konfirmasi Delete Menu (SweetAlert2)
+        function confirmDelete(kodeMenu) {
+            Swal.fire({
+                title: 'Yakin hapus menu ini?',
+                text: "Data yang dihapus tidak bisa dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/modules/orders/${kodeMenu}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Terhapus!', data.message, 'success');
+                            
+                            // ✅ Hapus baris tabel tanpa reload
+                            const row = document.querySelector(`tr[data-kode='${kodeMenu}']`);
+                            if (row) row.remove();
+                        } else {
+                            Swal.fire('Gagal!', 'Menu gagal dihapus.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Terjadi kesalahan saat menghapus.', 'error');
+                    });
+                }
+            });
+        }
+
+
     </script>
 </body>
 
