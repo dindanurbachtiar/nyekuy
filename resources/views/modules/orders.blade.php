@@ -335,37 +335,15 @@
         }
 
         .delete-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .delete-btn:hover {
-            background: #b02a37;
-        }
-
-        td button.edit-btn {
             background: #8B1538;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-size: 12px;
         }
-
-        td button.edit-btn:hover {
-            background: #A91B47;
-        }
-
 
         /* Modal Styles */
         .modal-overlay {
@@ -577,7 +555,7 @@
                     <tbody>
                         @if(isset($menus) && count($menus) > 0)
                             @foreach($menus as $menu)
-                                <tr data-kode="{{ $menu->kode_menu }}" 
+                                <tr
                                     onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }})">
                                     <td>{{ $menu->nama_menu }}</td>
                                     <td>{{ $menu->kode_menu }}</td>
@@ -586,10 +564,6 @@
                                         <button class="edit-btn"
                                             onclick="event.stopPropagation(); editMenu('{{ $menu->kode_menu }}', '{{ $menu->nama_menu }}', {{ $menu->harga }})">
                                             Edit
-                                        </button>
-                                        <button class="delete-btn"
-                                            onclick="event.stopPropagation(); confirmDelete('{{ $menu->kode_menu }}')">
-                                            Hapus
                                         </button>
                                     </td>
                                 </tr>
@@ -602,7 +576,6 @@
                             </tr>
                         @endif
                     </tbody>
-
                 </table>
             </div>
 
@@ -715,7 +688,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let selectedMenu = null;
         let orderItems = [];
@@ -867,44 +839,68 @@
                 body: JSON.stringify(orderData)
             })
             .then(response => {
-                // If it's a redirect, handle it and stop the chain
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    // Return a promise that never resolves to effectively stop the chain for this fetch
-                    return new Promise(() => {}); // This prevents subsequent .then/.catch from firing
-                }
+    console.log('Fetch response status:', response.status);
+    console.log('Fetch response redirected:', response.redirected);
+    console.log('Fetch response URL:', response.url);
+    console.log('Fetch response Content-Type:', response.headers.get('Content-Type'));
 
-                // If it's not a redirect, but an error, parse JSON and throw
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || 'Terjadi kesalahan server.');
-                    });
-                }
+    if (response.redirected) {
+        // Jika terjadi redirect, navigasikan browser dan hentikan pemrosesan JS lebih lanjut untuk fetch ini.
+        window.location.href = response.url;
+        // Segera kembalikan Promise.reject untuk mencegah .then() atau .catch() berikutnya
+        // dipanggil pada rantai fetch ini.
+        return new Promise(() => {}); // Ini mencegah subsequent .then/.catch dari firing
+    }
 
-                // This path should ideally not be reached if the backend always redirects on success.
-                // If it is reached, it means the backend returned a 2xx status but not a redirect.
-                // We'll still try to parse it as JSON, but it might be an empty response.
-                return response.json();
-            })
-            .then(data => {
-                // This block should only be reached if the server returned a successful JSON response (not a redirect).
-                // Based on the current backend, this path is not expected for successful order processing.
-                // If it does, it means the backend didn't redirect as expected.
-                document.getElementById('orderLoading').classList.remove('active');
-                document.getElementById('orderButton').disabled = false;
-                alert('Pesanan berhasil diproses, namun tidak ada pengalihan. Data: ' + JSON.stringify(data));
-            })
-            .catch(error => {
-                // This catch block will handle:
-                // 1. Network errors
-                // 2. Errors thrown from response.json().then(err => { throw new Error(...) })
-                // 3. Any other unexpected errors in the promise chain
-                document.getElementById('orderLoading').classList.remove('active');
-                document.getElementById('orderButton').disabled = false;
-                
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat memproses pesanan: ' + error.message);
+    // Jika tidak di-redirect, periksa apakah responsnya OK.
+    if (!response.ok) {
+        // Jika tidak OK, coba parse sebagai JSON untuk detail error.
+        // Jika bukan JSON, panggilan .json() akan melempar error, yang akan ditangkap oleh .catch() di bawah.
+        return response.json().then(errorData => {
+            throw new Error(errorData.message || 'Terjadi kesalahan server.');
+        }).catch(e => {
+            // Jika parsing sebagai JSON gagal, kemungkinan itu adalah halaman error HTML.
+            return response.text().then(text => {
+                console.error('Server merespons dengan status non-OK dan konten non-JSON:', text);
+                throw new Error('Terjadi kesalahan server. Respon tidak valid. Cek konsol untuk detail.');
             });
+        });
+    }
+
+    // Jika respons OK dan tidak di-redirect, seharusnya itu JSON.
+    // Ini adalah jalur di mana error "Unexpected token '<'" terjadi jika itu HTML.
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && !contentType.includes('application/json')) {
+        // Jika Content-Type bukan JSON, baca sebagai teks dan lempar error.
+        return response.text().then(text => {
+            console.error('Menerima konten non-JSON ketika JSON diharapkan (status OK):', text);
+            throw new Error('Terjadi kesalahan: Server mengembalikan format yang tidak diharapkan (bukan JSON).');
+        });
+    }
+
+    // Akhirnya, parse sebagai JSON jika semua pemeriksaan lolos.
+    return response.json();
+})
+.then(data => {
+    // Blok ini seharusnya tidak tercapai jika terjadi redirect.
+    // Jika tercapai, berarti server mengembalikan respons JSON 200 OK.
+    // Ini bukan perilaku yang diharapkan untuk proses order yang berhasil (yang seharusnya redirect).
+    document.getElementById('orderLoading').classList.remove('active');
+    document.getElementById('orderButton').disabled = false;
+    alert('Pesanan berhasil diproses, namun tidak ada pengalihan. Data: ' + JSON.stringify(data));
+})
+.catch(error => {
+    document.getElementById('orderLoading').classList.remove('active');
+    document.getElementById('orderButton').disabled = false;
+    
+    // Periksa apakah error adalah "Redirect handled" untuk menghindari menampilkan alert untuk itu.
+    if (error.message === 'Redirect handled, stopping fetch chain.') {
+        console.log(error.message);
+    } else {
+        console.error('Error in fetch chain:', error);
+        alert('Terjadi kesalahan saat memproses pesanan: ' + error.message);
+    }
+});
         }
 
         // Modal Functions
@@ -999,6 +995,17 @@
                         }, 2000);
                     } else {
                         showAlert(data.message || 'Gagal menambahkan menu!', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Terjadi kesalahan saat menambahkan menu!', 'error');
+                });
+        }
+
+        function submitEditMenu(event) {
+            event.preventDefault();
+
                     }
                 })
                 .catch(error => {
@@ -1131,46 +1138,6 @@
 
         // Initialize
         updateTotal();
-
-        // Konfirmasi Delete Menu (SweetAlert2)
-        function confirmDelete(kodeMenu) {
-            Swal.fire({
-                title: 'Yakin hapus menu ini?',
-                text: "Data yang dihapus tidak bisa dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, hapus!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/modules/orders/${kodeMenu}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Terhapus!', data.message, 'success');
-                            
-                            // ✅ Hapus baris tabel tanpa reload
-                            const row = document.querySelector(`tr[data-kode='${kodeMenu}']`);
-                            if (row) row.remove();
-                        } else {
-                            Swal.fire('Gagal!', 'Menu gagal dihapus.', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error!', 'Terjadi kesalahan saat menghapus.', 'error');
-                    });
-                }
-            });
-        }
-
-
     </script>
 </body>
 

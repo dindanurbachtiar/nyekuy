@@ -27,17 +27,17 @@ class OrderController extends Controller
     {
         try {
             $request->validate([
-                'kode_menu' => 'required|string|unique:menu,kode_menu',
+                'kode_menu' => 'required|string|unique:menus,kode_menu', // Perbaiki 'menu' menjadi 'menus'
                 'nama_menu' => 'required|string|max:255',
-                'harga' => 'required|integer|min:0'
+                'harga' => 'required|numeric|min:0' // Ubah integer ke numeric untuk harga
             ]);
 
             $menu = Menu::create([
                 'kode_menu' => $request->kode_menu,
                 'nama_menu' => $request->nama_menu,
                 'harga' => $request->harga,
-                'bahan_baku' => null,
-                'kode_bahan' => null
+                // 'bahan_baku' => null, // Hapus jika tidak ada di fillable atau kolom
+                // 'kode_bahan' => null // Hapus jika tidak ada di fillable atau kolom
             ]);
 
             return response()->json([
@@ -46,12 +46,18 @@ class OrderController extends Controller
                 'data' => $menu
             ]);
 
+        } catch (ValidationException $e) {
+            Log::error('Validasi gagal menambahkan menu', ['errors' => $e->errors()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal: ' . implode(', ', array_flatten($e->errors()))
+            ], 422);
         } catch (\Exception $e) {
             Log::error('Gagal menambahkan menu', ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menambahkan menu: ' . $e->getMessage()
-            ]);
+            ], 500);
         }
     }
 
@@ -62,7 +68,7 @@ class OrderController extends Controller
 
             $request->validate([
                 'nama_menu' => 'required|string|max:255',
-                'harga' => 'required|integer|min:0'
+                'harga' => 'required|numeric|min:0' // Ubah integer ke numeric
             ]);
 
             $menu->update([
@@ -76,11 +82,37 @@ class OrderController extends Controller
                 'data' => $menu
             ]);
 
+        } catch (ValidationException $e) {
+            Log::error('Validasi gagal mengupdate menu', ['errors' => $e->errors()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal: ' . implode(', ', array_flatten($e->errors()))
+            ], 422);
         } catch (\Exception $e) {
+            Log::error('Gagal mengupdate menu', ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengupdate menu: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy($kode_menu): JsonResponse
+    {
+        try {
+            $menu = Menu::where('kode_menu', $kode_menu)->firstOrFail();
+            $menu->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu berhasil dihapus!'
             ]);
+        } catch (\Exception $e) {
+            Log::error('Gagal menghapus menu', ['error' => $e->getMessage(), 'kode_menu' => $kode_menu]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus menu: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -107,7 +139,7 @@ class OrderController extends Controller
                 'items.*.kode_menu' => 'required|string',
                 'items.*.nama_menu' => 'required|string',
                 'items.*.quantity' => 'required|integer|min:1',
-                'total' => 'required|integer|min:0'
+                'total' => 'required|numeric|min:0' // Ubah integer ke numeric
             ]);
             Log::debug('Validasi berhasil');
 
@@ -273,23 +305,4 @@ class OrderController extends Controller
 
         return view('modules.daily-order-report', compact('laporan'));
     }
-
-    public function destroy($kode_menu)
-    {
-        try {
-            $menu = Menu::findOrFail($kode_menu);
-            $menu->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Menu berhasil dihapus'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus menu'
-            ], 500);
-        }
-    }
-
 }
