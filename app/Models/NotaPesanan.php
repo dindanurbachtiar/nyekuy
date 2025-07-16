@@ -4,22 +4,95 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class NotaPesanan extends Model
 {
     use HasFactory;
 
     protected $table = 'nota_pesanan';
-    protected $primaryKey = 'kode_pesanan';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
         'kode_pesanan',
         'nama_pelanggan',
-        'jumlah_pesanan',
         'nama_menu',
         'kode_menu',
-        'id_pelayan'
+        'jumlah_pesanan',
+        'id_pelayan',
+        'harga_satuan',
+        'total_harga',
+        'tanggal_pesanan',
+        'status'
     ];
+
+    protected $casts = [
+        'harga_satuan' => 'decimal:2',
+        'total_harga' => 'decimal:2',
+        'tanggal_pesanan' => 'datetime'
+    ];
+
+    /**
+     * Generate kode pesanan otomatis
+     */
+    public static function generateKodePesanan()
+    {
+        $now = Carbon::now('Asia/Jakarta');
+        $dateFormat = $now->format('ymd'); // Format: 250716
+        
+        // Cari nomor urut terakhir untuk hari ini
+        $lastOrder = self::where('kode_pesanan', 'like', "PSN-{$dateFormat}-%")
+                        ->orderBy('kode_pesanan', 'desc')
+                        ->first();
+        
+        if ($lastOrder) {
+            // Ambil nomor urut terakhir dan tambah 1
+            $lastNumber = (int) substr($lastOrder->kode_pesanan, -3);
+            $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        } else {
+            // Jika belum ada pesanan hari ini, mulai dari 001
+            $newNumber = '001';
+        }
+        
+        return "PSN-{$dateFormat}-{$newNumber}";
+    }
+
+    /**
+     * Relasi ke menu
+     */
+    public function menu()
+    {
+        return $this->belongsTo(Menu::class, 'kode_menu', 'kode_menu');
+    }
+
+    /**
+     * Scope untuk pesanan hari ini
+     */
+    public function scopeToday($query)
+    {
+        return $query->whereDate('tanggal_pesanan', today());
+    }
+
+    /**
+     * Scope berdasarkan pelanggan
+     */
+    public function scopeByCustomer($query, $customerName)
+    {
+        return $query->where('nama_pelanggan', 'like', "%{$customerName}%");
+    }
+
+    /**
+     * Scope berdasarkan status
+     */
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Accessor untuk format tanggal Indonesia
+     */
+    public function getFormattedTanggalPesananAttribute()
+    {
+        return $this->tanggal_pesanan->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s');
+    }
 }

@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
 
     // Search menu (AJAX)
     Route::get('/modules/orders/search', [OrderController::class, 'search'])->name('orders.search');
+    Route::post('/modules/orders/process', [OrderController::class, 'processOrder'])->name('orders.process');
 
     // Materials
     Route::get('/modules/materials', [BahanBakuController::class, 'index'])->name('materials.index');
@@ -48,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/payment/calculate-change', [PaymentController::class, 'calculateChange'])->name('payment.calculate');
     Route::post('/payment/process', [PaymentController::class, 'processPayment'])->name('payment.process');
     Route::get('/payment/success', [PaymentController::class, 'paymentSuccess'])->name('payment.success');
+    Route::get('/orders', function () {return view('modules.orders');
+});
+
 
     // Reports
     Route::get('/modules/reports', function () {

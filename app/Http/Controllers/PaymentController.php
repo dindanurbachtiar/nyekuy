@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
     public function showPaymentForm(Request $request)
     {
         $orderTotal = $request->input('order_total');
-
         $quickAmounts = [10000, 20000, 50000, 100000]; // bisa custom
 
         return view('payment.form', compact('orderTotal', 'quickAmounts'));
     }
 
-
     public function calculateChange(Request $request)
     {
         $orderTotal = $request->order_total;
         $paidAmount = $request->paid_amount;
-
         $change = $paidAmount - $orderTotal;
 
         return response()->json([
@@ -52,17 +53,20 @@ class PaymentController extends Controller
             return back()->with('error', 'Uang yang dibayarkan kurang dari total pesanan!')->withInput();
         }
 
+        // Generate kode transaksi unik
+        $kodeTransaksi = Transaksi::generateKodeTransaksi();
+
         $paymentData = [
             'order_total' => $orderTotal,
             'paid_amount' => $paidAmount,
             'change_amount' => $change,
             'payment_method' => $request->payment_method,
-            'transaction_id' => 'TXN-' . time() . '-' . rand(1000, 9999),
+            'transaction_id' => $kodeTransaksi,
             'status' => 'completed',
-            'payment_date' => now()
+            'payment_date' => Carbon::now('Asia/Jakarta')
         ];
 
-        // Simulasi proses pembayaran tunai
+        // Proses pembayaran dan simpan ke database
         $paymentResult = $this->processCashPayment($paymentData);
 
         if ($paymentResult['success']) {
@@ -74,14 +78,55 @@ class PaymentController extends Controller
 
     private function processCashPayment($paymentData)
     {
-        // Simulasi proses pembayaran tunai
-        // Dalam implementasi nyata, ini bisa menyimpan ke database
+        try {
+            DB::beginTransaction();
 
-        return [
-            'success' => true,
-            'transaction_id' => $paymentData['transaction_id'],
-            'message' => 'Pembayaran tunai berhasil'
-        ];
+            // Validasi panjang kode transaksi
+            if (strlen($paymentData['transaction_id']) > 50) {
+                throw new \Exception('Kode transaksi terlalu panjang');
+            }
+
+            // Simpan transaksi ke database
+            $transaksi = Transaksi::create([
+                'kode_transaksi' => $paymentData['transaction_id'],
+                'tgl_bayar' => Carbon::parse($paymentData['payment_date'])->setTimezone('Asia/Jakarta'),
+                'total_bayar' => $paymentData['order_total'],
+                'jumlah_bayar' => $paymentData['paid_amount'],
+                'kembalian' => $paymentData['change_amount'],
+                'metode_bayar' => $paymentData['payment_method'],
+                'status' => $paymentData['status']
+            ]);
+
+            DB::commit();
+
+            Log::info('Transaksi berhasil disimpan', [
+                'kode_transaksi' => $transaksi->kode_transaksi,
+                'total_bayar' => $transaksi->total_bayar,
+                'panjang_kode' => strlen($transaksi->kode_transaksi)
+            ]);
+
+            return [
+                'success' => true,
+                'transaction_id' => $paymentData['transaction_id'],
+                'message' => 'Pembayaran tunai berhasil dan data tersimpan',
+                'transaksi_id' => $transaksi->id
+            ];
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Gagal menyimpan transaksi', [
+                'error' => $e->getMessage(),
+                'kode_transaksi' => $paymentData['transaction_id'],
+                'panjang_kode' => strlen($paymentData['transaction_id']),
+                'sql_state' => $e->getCode()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Gagal menyimpan transaksi: ' . $e->getMessage()
+            ];
+        }
     }
 
     public function paymentSuccess()
@@ -93,5 +138,67 @@ class PaymentController extends Controller
         }
 
         return view('payment.success', compact('paymentData'));
+    }
+
+    /**
+     * Test generate kode transaksi
+     */
+    public function testKodeTransaksi()
+    {
+        $kode1 = Transaksi::generateKodeTransaksi();
+        $kode2 = Transaksi::generateKodeTransaksiShort();
+        
+        return response()->json([
+            'kode_normal' => $kode1,
+            'panjang_normal' => strlen($kode1),
+            'kode_pendek' => $kode2,
+            'panjang_pendek' => strlen($kode2),
+            'timestamp' => now()->format('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Menampilkan riwayat transaksi
+     */
+    public function transactionHistory()
+    {
+        $transaksi = Transaksi::orderBy('tgl_bayar', 'desc')
+                             ->paginate(20);
+
+        return view('payment.history', compact('transaksi'));
+    }
+
+    /**
+     * Detail transaksi berdasarkan kode
+     */
+    public function transactionDetail($kodeTransaksi)
+    {
+        $transaksi = Transaksi::where('kode_transaksi', $kodeTransaksi)->firstOrFail();
+        
+        return view('payment.detail', compact('transaksi'));
+    }
+
+    /**
+     * Laporan transaksi harian
+     */
+    public function dailyReport()
+    {
+        $today = today();
+        
+        $transaksiHariIni = Transaksi::today()->byStatus('completed')->get();
+        
+        $totalTransaksi = $transaksiHariIni->count();
+        $totalPendapatan = $transaksiHariIni->sum('total_bayar');
+        $rataRataTransaksi = $totalTransaksi > 0 ? $totalPendapatan / $totalTransaksi : 0;
+
+        $laporan = [
+            'tanggal' => $today->format('d/m/Y'),
+            'total_transaksi' => $totalTransaksi,
+            'total_pendapatan' => $totalPendapatan,
+            'rata_rata_transaksi' => $rataRataTransaksi,
+            'transaksi' => $transaksiHariIni
+        ];
+
+        return view('payment.report', compact('laporan'));
     }
 }

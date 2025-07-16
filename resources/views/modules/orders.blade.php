@@ -329,6 +329,11 @@
             background: #A91B47;
         }
 
+        .order-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
         .delete-btn {
             background: #8B1538;
             color: white;
@@ -477,6 +482,16 @@
             color: #721c24;
         }
 
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -599,11 +614,11 @@
                         </div>
                     </div>
 
-                    <form id="orderForm" method="GET" action="{{ route('payment.form') }}">
-                        <input type="hidden" name="order_total" id="hiddenTotal">
-                        <button type="submit" class="order-btn">Pesan</button>
-                    </form>
+                    <div class="loading" id="orderLoading">
+                        <i class="fas fa-spinner fa-spin"></i> Memproses pesanan...
+                    </div>
 
+                    <button type="button" class="order-btn" id="orderButton" onclick="processOrder()">Pesan</button>
                 </div>
             </div>
         </div>
@@ -785,8 +800,6 @@
         function updateTotal() {
             total = orderItems.reduce((sum, item) => sum + item.total, 0);
             document.getElementById('totalAmount').textContent = `Rp. ${total.toLocaleString('id-ID')}`;
-            document.getElementById('hiddenTotal').value = total;
-
         }
 
         function processOrder() {
@@ -801,6 +814,10 @@
                 alert('Belum ada item yang dipilih!');
                 return;
             }
+
+            // Show loading
+            document.getElementById('orderLoading').classList.add('active');
+            document.getElementById('orderButton').disabled = true;
 
             const orderData = {
                 nama_pelanggan: customerName,
@@ -821,24 +838,45 @@
                 },
                 body: JSON.stringify(orderData)
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`Pesanan berhasil! Kode Transaksi: ${data.kode_transaksi}`);
+            .then(response => {
+                // If it's a redirect, handle it and stop the chain
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    // Return a promise that never resolves to effectively stop the chain for this fetch
+                    return new Promise(() => {}); // This prevents subsequent .then/.catch from firing
+                }
 
-                        // Reset form
-                        orderItems = [];
-                        updateOrderTable();
-                        updateTotal();
-                        document.getElementById('customerName').value = '';
-                    } else {
-                        alert('Gagal memproses pesanan!');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan saat memproses pesanan!');
-                });
+                // If it's not a redirect, but an error, parse JSON and throw
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Terjadi kesalahan server.');
+                    });
+                }
+
+                // This path should ideally not be reached if the backend always redirects on success.
+                // If it is reached, it means the backend returned a 2xx status but not a redirect.
+                // We'll still try to parse it as JSON, but it might be an empty response.
+                return response.json();
+            })
+            .then(data => {
+                // This block should only be reached if the server returned a successful JSON response (not a redirect).
+                // Based on the current backend, this path is not expected for successful order processing.
+                // If it does, it means the backend didn't redirect as expected.
+                document.getElementById('orderLoading').classList.remove('active');
+                document.getElementById('orderButton').disabled = false;
+                alert('Pesanan berhasil diproses, namun tidak ada pengalihan. Data: ' + JSON.stringify(data));
+            })
+            .catch(error => {
+                // This catch block will handle:
+                // 1. Network errors
+                // 2. Errors thrown from response.json().then(err => { throw new Error(...) })
+                // 3. Any other unexpected errors in the promise chain
+                document.getElementById('orderLoading').classList.remove('active');
+                document.getElementById('orderButton').disabled = false;
+                
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat memproses pesanan: ' + error.message);
+            });
         }
 
         // Modal Functions
@@ -932,7 +970,7 @@
                             closeAddMenuModal();
                         }, 2000);
                     } else {
-                        showAlert('Gagal menambahkan menu!', 'error');
+                        showAlert(data.message || 'Gagal menambahkan menu!', 'error');
                     }
                 })
                 .catch(error => {
@@ -987,7 +1025,7 @@
                             closeEditMenuModal();
                         }, 2000);
                     } else {
-                        showAlert('Gagal mengupdate menu!', 'error', 'editAlertContainer');
+                        showAlert(data.message || 'Gagal mengupdate menu!', 'error', 'editAlertContainer');
                     }
                 })
                 .catch(error => {

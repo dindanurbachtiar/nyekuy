@@ -62,7 +62,7 @@
             <button onclick="window.print()" class="btn btn-primary">
                 <i class="fas fa-print me-1"></i> Cetak Struk
             </button>
-            <a href="{{ route('payment.form') }}" class="btn btn-success">
+                <a href="{{ url('/modules/orders') }}" class="btn btn-success">
                 <i class="fas fa-plus me-1"></i> Transaksi Baru
             </a>
         </div>
