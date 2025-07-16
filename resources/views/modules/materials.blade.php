@@ -136,7 +136,7 @@
             background: #e9ecef;
             padding: 15px 20px;
             display: grid;
-            grid-template-columns: 200px 1fr 150px 100px;
+            grid-template-columns: 200px 1fr 150px 180px;
             gap: 20px;
             font-weight: 600;
             color: #495057;
@@ -146,7 +146,7 @@
         .table-row {
             padding: 15px 20px;
             display: grid;
-            grid-template-columns: 200px 1fr 150px 100px;
+            grid-template-columns: 200px 1fr 150px 180px;
             gap: 20px;
             align-items: center;
             border-bottom: 1px solid #f0f0f0;
@@ -192,6 +192,24 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+
+        .delete-btn:hover {
+            background: #b02a37;
+        }
+
 
         .edit-btn:hover {
             background: #A91B47;
@@ -398,8 +416,13 @@
                         <div class="material-code">{{ $bahan->kode_bahan }}</div>
                         <div class="material-name">{{ $bahan->nama_bahan }}</div>
                         <div class="material-qty">{{ $bahan->stok }}</div>
-                        <div>
+                        <div class="actions">
                             <button class="edit-btn" onclick="openEditMaterialModal('{{ $bahan->kode_bahan }}')">Edit</button>
+                            <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
+                            </form>
                         </div>
                     </div>
                 @endforeach
@@ -471,56 +494,59 @@
 
     {{-- Script --}}
     <script>
-        function openAddMaterialModal() {
-            document.getElementById('addMaterialModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
+    function openAddMaterialModal() {
+        document.getElementById('addMaterialModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 
-        function closeAddMaterialModal() {
-            document.getElementById('addMaterialModal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
+    function closeAddMaterialModal() {
+        document.getElementById('addMaterialModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 
-        function openEditMaterialModal(kode) {
-            fetch(`/bahan-baku/get/${kode}`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('editMaterialCode').value = data.kode_bahan;
-                    document.getElementById('editMaterialName').value = data.nama_bahan;
-                    document.getElementById('editMaterialQty').value = data.stok;
+    function openEditMaterialModal(kode) {
+        console.log('Klik Edit:', kode);
+        fetch(`/bahan-baku/get/${kode}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log('Data diterima:', data);
+                document.getElementById('editMaterialCode').value = data.kode_bahan;
+                document.getElementById('editMaterialName').value = data.nama_bahan;
+                document.getElementById('editMaterialQty').value = data.stok;
 
-                    document.getElementById('editMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
-                    document.getElementById('deleteMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
+                document.getElementById('editMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
+                document.getElementById('deleteMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
 
-                    document.getElementById('editMaterialModal').classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                });
-        }
-
-        function closeEditMaterialModal() {
-            document.getElementById('editMaterialModal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        // Escape
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeAddMaterialModal();
-                closeEditMaterialModal();
-            }
-        });
-
-        // Search
-        document.getElementById('searchInput').addEventListener('input', function (e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('.table-row');
-            rows.forEach(row => {
-                const code = row.querySelector('.material-code').textContent.toLowerCase();
-                const name = row.querySelector('.material-name').textContent.toLowerCase();
-                row.style.display = code.includes(searchTerm) || name.includes(searchTerm) ? 'grid' : 'none';
+                document.getElementById('editMaterialModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
             });
+    }
+
+    function closeEditMaterialModal() {
+        document.getElementById('editMaterialModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Escape modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAddMaterialModal();
+            closeEditMaterialModal();
+        }
+    });
+
+    // Search filter
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.table-row');
+        rows.forEach(row => {
+            const code = row.querySelector('.material-code').textContent.toLowerCase();
+            const name = row.querySelector('.material-name').textContent.toLowerCase();
+            row.style.display = code.includes(searchTerm) || name.includes(searchTerm) ? 'grid' : 'none';
         });
+    });
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             @if(session('success'))

@@ -13,6 +13,7 @@ class Laporan extends Model
     protected $primaryKey = 'kode_laporan';
     public $incrementing = false;
     protected $keyType = 'string';
+    public $timestamps = false;
 
     protected $fillable = [
         'kode_laporan',

@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\LaporanController;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -23,19 +24,23 @@ Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Orders Page
+    /**
+     * Orders
+     */
+    // Tampilkan halaman order
     Route::get('/modules/orders', [OrderController::class, 'index'])->name('orders.index');
 
-    // Orders CRUD (Store & Update)
-    Route::resource('modules/orders', OrderController::class)
+    // CRUD Order (Store & Update)
+    Route::resource('/modules/orders', OrderController::class)
         ->only(['store', 'update'])
         ->parameters(['orders' => 'kode_menu']);
 
     // Search menu (AJAX)
     Route::get('/modules/orders/search', [OrderController::class, 'search'])->name('orders.search');
-    Route::post('/modules/orders/process', [OrderController::class, 'processOrder'])->name('orders.process');
 
-    // Materials
+    /**
+     * Materials
+     */
     Route::get('/modules/materials', [BahanBakuController::class, 'index'])->name('materials.index');
 
     // Bahan Baku CRUD
@@ -44,7 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'update']);
     Route::delete('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'destroy']);
 
-    // Payment
+    /**
+     * Payment
+     */
     Route::get('/payment', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
     Route::post('/payment/calculate-change', [PaymentController::class, 'calculateChange'])->name('payment.calculate');
     Route::post('/payment/process', [PaymentController::class, 'processPayment'])->name('payment.process');
@@ -53,8 +60,9 @@ Route::middleware('auth')->group(function () {
 });
 
 
-    // Reports
-    Route::get('/modules/reports', function () {
-        return view('modules.reports');
-    })->name('reports.index');
+    /**
+     * Reports
+     */
+    Route::get('/modules/reports', [LaporanController::class, 'index'])->name('reports.index');
+
 });

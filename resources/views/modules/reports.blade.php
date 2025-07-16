@@ -103,7 +103,7 @@
 
         .search-input {
             width: 100%;
-            padding: 12px 45px 12px 15px;
+            padding: 12px 15px 12px 40px; 
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 14px;
@@ -111,6 +111,7 @@
             transition: border-color 0.3s ease;
             background: white;
         }
+
 
         .search-input:focus {
             border-color: #8B1538;
@@ -209,6 +210,39 @@
             font-weight: 700;
         }
 
+        @media print {
+            .header, .filter-section, .back-btn {
+                display: none !important;
+            }
+
+            .print-title {
+                display: block !important;
+                text-align: center !important;
+                font-size: 32px !important;
+                font-weight: bold !important;
+                margin-bottom: 10px !important;
+            }
+
+            .print-date {
+                display: block !important;
+                text-align: center !important;
+                font-size: 14px !important;
+                margin-bottom: 20px !important;
+            }
+        }
+
+        .print-title {
+            display: none;
+        }
+
+        .print-date {
+            display: none;
+        }
+
+
+
+
+
         @media (max-width: 1024px) {
             .container {
                 padding: 15px;
@@ -280,6 +314,8 @@
 
 <body>
     <div class="container">
+        <div class="print-title">Laporan NYEKUY</div>
+        <div class="print-date">Dicetak pada: <span id="printDate"></span></div>
         <!-- Header -->
         <div class="header">
             <button class="back-btn" onclick="goBack()">
@@ -288,100 +324,79 @@
             <h1 class="page-title">Laporan</h1>
         </div>
 
-        <!-- Filter and Search Section -->
         <div class="filter-section">
-            <div class="dropdown">
-                <button class="dropdown-btn">
-                    Per Tahun <i class="fas fa-chevron-down"></i>
+            <form method="GET" action="{{ route('reports.index') }}" style="display:flex; gap:10px;">
+                <!-- Filter Tahun -->
+                <select name="year" class="dropdown-btn">
+                    <option value="">Semua Tahun</option>
+                    <option value="2025" {{ request('year') == '2025' ? 'selected' : '' }}>2025</option>
+                    <option value="2024" {{ request('year') == '2024' ? 'selected' : '' }}>2024</option>
+                </select>
+
+                <!-- Tombol Filter -->
+                <button type="submit" style="padding:10px 15px; background:#8B1538; color:white; border:none; border-radius:8px;">
+                    Filter
                 </button>
-            </div>
-            <div class="dropdown">
-                <button class="dropdown-btn">
-                    <i class="fas fa-briefcase"></i> Laporan Penjualan <i class="fas fa-chevron-down"></i>
+
+                <!-- Tombol Cetak Laporan -->
+                <button type="button" onclick="printReport()" style="padding:10px 15px; background:#198754; color:white; border:none; border-radius:8px;">
+                    Cetak Laporan
                 </button>
-            </div>
-            <div class="dropdown">
-                <button class="dropdown-btn">
-                    - <i class="fas fa-chevron-down"></i>
-                </button>
-            </div>
-            <div class="dropdown">
-                <button class="dropdown-btn">
-                    2024 <i class="fas fa-chevron-down"></i>
-                </button>
-            </div>
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Cari Laporan" id="searchInput">
-            </div>
+            </form>
         </div>
 
-        <!-- Main Content - Table -->
+
+
         <div class="main-content">
             <!-- Table Header -->
             <div class="table-header">
-                <div>#</div>
+                <div>No</div> <!-- Kolom nomor -->
                 <div>KODE_LAPORAN</div>
                 <div>TGL_LAPORAN</div>
                 <div>PENDAPATAN</div>
                 <div>KODE_TRANSAKSI</div>
             </div>
 
+
             <!-- Table Body -->
-            <div id="reportsTable">
-                <!-- Data Laporan Hardcode -->
+        <div id="reportsTable">
+            @foreach($Laporann as $Lapor)
                 <div class="table-row">
-                    <div class="table-cell">1</div>
-                    <div class="table-cell">L001</div>
-                    <div class="table-cell">14/07/2025</div>
-                    <div class="table-cell">Rp. 15.000</div>
-                    <div class="table-cell">T001</div>
+                    <div>{{ $loop->iteration }}</div> <!-- Nomor -->
+                    <div>{{ $Lapor->kode_laporan }}</div>
+                    <div>{{ $Lapor->tgl_laporan->format('d-m-Y') }}</div>
+                    <div>Rp {{ number_format($Lapor->pendapatan, 0, ',', '.') }}</div>
+                    <div>{{ $Lapor->kode_transaksi }}</div>
                 </div>
-                <div class="table-row">
-                    <div class="table-cell">2</div>
-                    <div class="table-cell">L002</div>
-                    <div class="table-cell">14/07/2025</div>
-                    <div class="table-cell">Rp. 30.000</div>
-                    <div class="table-cell">T002</div>
-                </div>
-                <div class="table-row">
-                    <div class="table-cell">3</div>
-                    <div class="table-cell">L003</div>
-                    <div class="table-cell">15/07/2025</div>
-                    <div class="table-cell">Rp. 25.000</div>
-                    <div class="table-cell">T003</div>
-                </div>
-                <div class="table-row">
-                    <div class="table-cell">4</div>
-                    <div class="table-cell">L004</div>
-                    <div class="table-cell">15/07/2025</div>
-                    <div class="table-cell">Rp. 18.000</div>
-                    <div class="table-cell">T004</div>
-                </div>
-                <div class="table-row">
-                    <div class="table-cell">5</div>
-                    <div class="table-cell">L005</div>
-                    <div class="table-cell">16/07/2025</div>
-                    <div class="table-cell">Rp. 40.000</div>
-                    <div class="table-cell">T005</div>
-                </div>
-                <!-- Tambahkan baris data lainnya di sini jika diperlukan -->
-            </div>
+            @endforeach
         </div>
+        </div>
+
 
         <!-- Total Pendapatan Card -->
         <div class="total-card-container">
             <div class="total-card">
                 <span class="total-card-label">Total Pendapatan</span>
-                <span class="total-card-amount">Rp. 128.000</span> <!-- Total dari data hardcode di atas -->
+                <span class="total-card-amount">Rp. {{ number_format($totalPendapatan, 0, ',', '.') }}</span>
             </div>
         </div>
+
     </div>
 
     <script>
+        function printReport() {
+            window.print(); // Langsung cetak halaman ini
+        }
+
         function goBack() {
             window.history.back(); // Kembali ke halaman sebelumnya
         }
+
+        document.getElementById('printDate').textContent = new Date().toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
 
         // Fungsi pencarian (hanya untuk tampilan, tidak ada filter backend)
         document.getElementById('searchInput').addEventListener('input', function (e) {

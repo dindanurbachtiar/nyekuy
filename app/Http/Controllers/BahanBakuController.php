@@ -44,12 +44,9 @@ class BahanBakuController extends Controller
 
     public function destroy($kode_bahan)
     {
-        $bahan = BahanBaku::find($kode_bahan);
-        if (!$bahan) {
-            return redirect()->back()->with('error', 'Data gagal dihapus');
-        }
-
+        $bahan = BahanBaku::findOrFail($kode_bahan);
         $bahan->delete();
-        return redirect()->back()->with('success', 'Data berhasil dihapus');
+
+        return redirect()->route('materials.index')->with('success', 'Bahan berhasil dihapus');
     }
 }
