@@ -13,6 +13,7 @@ class Menu extends Model
     protected $primaryKey = 'kode_menu';
     public $incrementing = false;
     protected $keyType = 'string';
+    public $timestamps = false; // Nonaktifkan created_at & updated_at
 
     protected $fillable = [
         'kode_menu',
