@@ -8,12 +8,13 @@ use App\Models\Laporan;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
-use App\Models\Transaksi;
+use App\Models\Transaksi; // Pastikan ini diimpor
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Arr; // <<< TAMBAHKAN BARIS INI
 
 class OrderController extends Controller
 {
@@ -27,17 +28,15 @@ class OrderController extends Controller
     {
         try {
             $request->validate([
-                'kode_menu' => 'required|string|unique:menus,kode_menu', // Perbaiki 'menu' menjadi 'menus'
+                'kode_menu' => 'required|string|unique:menus,kode_menu',
                 'nama_menu' => 'required|string|max:255',
-                'harga' => 'required|numeric|min:0' // Ubah integer ke numeric untuk harga
+                'harga' => 'required|numeric|min:0'
             ]);
 
             $menu = Menu::create([
                 'kode_menu' => $request->kode_menu,
                 'nama_menu' => $request->nama_menu,
                 'harga' => $request->harga,
-                // 'bahan_baku' => null, // Hapus jika tidak ada di fillable atau kolom
-                // 'kode_bahan' => null // Hapus jika tidak ada di fillable atau kolom
             ]);
 
             return response()->json([
@@ -50,7 +49,7 @@ class OrderController extends Controller
             Log::error('Validasi gagal menambahkan menu', ['errors' => $e->errors()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: ' . implode(', ', array_flatten($e->errors()))
+                'message' => 'Validasi gagal: ' . implode(', ', Arr::flatten($e->errors())) // <<< UBAH DI SINI
             ], 422);
         } catch (\Exception $e) {
             Log::error('Gagal menambahkan menu', ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
@@ -68,7 +67,7 @@ class OrderController extends Controller
 
             $request->validate([
                 'nama_menu' => 'required|string|max:255',
-                'harga' => 'required|numeric|min:0' // Ubah integer ke numeric
+                'harga' => 'required|numeric|min:0'
             ]);
 
             $menu->update([
@@ -86,7 +85,7 @@ class OrderController extends Controller
             Log::error('Validasi gagal mengupdate menu', ['errors' => $e->errors()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: ' . implode(', ', array_flatten($e->errors()))
+                'message' => 'Validasi gagal: ' . implode(', ', Arr::flatten($e->errors())) // <<< UBAH DI SINI
             ], 422);
         } catch (\Exception $e) {
             Log::error('Gagal mengupdate menu', ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
@@ -139,21 +138,17 @@ class OrderController extends Controller
                 'items.*.kode_menu' => 'required|string',
                 'items.*.nama_menu' => 'required|string',
                 'items.*.quantity' => 'required|integer|min:1',
-                'total' => 'required|numeric|min:0' // Ubah integer ke numeric
+                'total' => 'required|numeric|min:0'
             ]);
             Log::debug('Validasi berhasil');
 
-            $kodeTransaksi = 'TRX-' . date('ymdHis') . '-' . rand(100, 999);
-            $idPelayan = auth()->user()->id ?? 'P001'; // Diubah dari 'PELAYAN001' ke 'P001'
+            $kodeTransaksi = Transaksi::generateKodeTransaksi(); 
             $totalPendapatan = 0;
 
-            // Simpan setiap item ke nota_pesanan
             foreach ($request->items as $item) {
                 Log::debug('Memproses item', ['item' => $item]);
-                // Generate kode pesanan unik untuk setiap item
                 $kodePesanan = NotaPesanan::generateKodePesanan();
                 
-                // Ambil data menu untuk mendapatkan harga
                 $menu = Menu::where('kode_menu', $item['kode_menu'])->first();
                 
                 if (!$menu) {
@@ -171,7 +166,6 @@ class OrderController extends Controller
                     'nama_menu' => $item['nama_menu'],
                     'kode_menu' => $item['kode_menu'],
                     'jumlah_pesanan' => $item['quantity'],
-                    'id_pelayan' => $idPelayan,
                     'harga_satuan' => $hargaSatuan,
                     'total_harga' => $totalHarga,
                     'tanggal_pesanan' => Carbon::now('Asia/Jakarta'),
@@ -183,7 +177,6 @@ class OrderController extends Controller
                 Log::debug('Item disimpan ke NotaPesanan', ['kode_pesanan' => $kodePesanan]);
             }
 
-            // Simpan ke laporan jika model Laporan ada
             if (class_exists('App\Models\Laporan')) {
                 $kodeLaporan = 'LAP-' . date('ymdHis') . '-' . rand(100, 999);
                 
@@ -214,7 +207,7 @@ class OrderController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Data pesanan tidak valid: ' . implode(', ', array_flatten($e->errors()))
+                'message' => 'Data pesanan tidak valid: ' . implode(', ', Arr::flatten($e->errors())) // <<< UBAH DI SINI
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -234,9 +227,6 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Menampilkan riwayat pesanan
-     */
     public function orderHistory()
     {
         $pesanan = NotaPesanan::with('menu')
@@ -246,18 +236,12 @@ class OrderController extends Controller
         return view('modules.order-history', compact('pesanan'));
     }
 
-    /**
-     * Menampilkan detail pesanan berdasarkan kode
-     */
     public function orderDetail($kodePesanan)
     {
         $pesanan = NotaPesanan::where('kode_pesanan', $kodePesanan)->firstOrFail();
         return view('modules.order-detail', compact('pesanan'));
     }
 
-    /**
-     * Update status pesanan
-     */
     public function updateOrderStatus(Request $request, $kodePesanan)
     {
         try {
@@ -282,9 +266,6 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Laporan pesanan harian
-     */
     public function dailyOrderReport()
     {
         $today = today();
