@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nama_pelayan', 100);
             $table->string('username', 100)->unique(); // Menambahkan kolom username
             $table->string('password'); // Menambahkan kolom password (akan disimpan dalam bentuk hash)
-            $table->timestamps();
+            $table->timestamps(); // Laravel's default created_at and updated_at
         });
     }
 

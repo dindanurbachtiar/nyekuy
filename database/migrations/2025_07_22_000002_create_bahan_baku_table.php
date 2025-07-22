@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('transaksi', function (Blueprint $table) {
-            // Ubah panjang kolom kode_transaksi dari default ke 50 karakter
-            $table->string('kode_transaksi', 50)->change();
+        Schema::create('bahan_baku', function (Blueprint $table) {
+            $table->string('kode_bahan', 12)->primary();
+            $table->string('nama_bahan_baku', 50); // Menambahkan kolom nama bahan baku
+            $table->timestamps();
         });
     }
 
@@ -22,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('transaksi', function (Blueprint $table) {
-            $table->string('kode_transaksi', 255)->change();
-        });
+        Schema::dropIfExists('bahan_baku');
     }
 };

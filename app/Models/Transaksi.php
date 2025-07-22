@@ -19,7 +19,9 @@ class Transaksi extends Model
         'jumlah_bayar',
         'kembalian',
         'metode_bayar',
-        'status'
+        'status',
+        'kode_pesanan', // Tambahkan ini jika transaksi terkait dengan pesanan
+        'id_pelayan'    // Tambahkan ini jika transaksi terkait dengan pelayan
     ];
 
     protected $casts = [

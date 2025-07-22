@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaksi;
+use App\Models\Laporan; // Tambahkan ini
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -96,6 +97,16 @@ class PaymentController extends Controller
                 'metode_bayar' => $paymentData['payment_method'],
                 'status' => $paymentData['status']
             ]);
+
+            // --- BAGIAN BARU: Simpan Laporan ---
+            $kodeLaporan = Laporan::generateKodeLaporan();
+            Laporan::create([
+                'kode_laporan' => $kodeLaporan,
+                'tgl_laporan' => Carbon::today('Asia/Jakarta'), // Tanggal laporan hari ini
+                'pendapatan' => $transaksi->total_bayar, // Pendapatan dari total_bayar transaksi
+                'kode_transaksi' => $transaksi->kode_transaksi // Foreign key ke transaksi yang baru dibuat
+            ]);
+            // --- AKHIR BAGIAN BARU ---
 
             DB::commit();
 
