@@ -332,6 +332,11 @@
                     <option value="2025" {{ request('year') == '2025' ? 'selected' : '' }}>2025</option>
                     <option value="2024" {{ request('year') == '2024' ? 'selected' : '' }}>2024</option>
                 </select>
+                <select name="month" class="dropdown-btn">
+                    <option value="">Semua Bulan</option>
+                    <option value="07" {{ request('month') == '07' ? 'selected' : '' }}>Juli</option>
+                    <option value="08" {{ request('month') == '08' ? 'selected' : '' }}>Agustus</option>
+                </select>
 
                 <!-- Tombol Filter -->
                 <button type="submit" style="padding:10px 15px; background:#8B1538; color:white; border:none; border-radius:8px;">

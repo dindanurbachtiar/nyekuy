@@ -12,10 +12,15 @@ class LaporanController extends Controller
     {
         $query = Laporan::query();
 
-        // Filter berdasarkan tahun
-        if ($request->has('year') && $request->year != '') {
-            $query->whereYear('tgl_laporan', $request->year);
-        }
+       // Filter berdasarkan tahun dan bulan
+        if (($request->has('year') && $request->year != '') || ($request->has('month') && $request->month != '')) {
+            if ($request->year != '') {
+                $query->whereYear('tgl_laporan', $request->year);
+            }
+            if ($request->month != '') {
+                $query->whereMonth('tgl_laporan', $request->month);
+            }
+        }       
 
         // Filter berdasarkan jenis laporan (misalnya cek dari kode_transaksi)
         // Ini mungkin perlu disesuaikan jika 'type' merujuk ke sesuatu selain kode_transaksi
