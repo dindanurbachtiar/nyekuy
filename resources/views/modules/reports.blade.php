@@ -329,13 +329,23 @@
                 <!-- Filter Tahun -->
                 <select name="year" class="dropdown-btn">
                     <option value="">Semua Tahun</option>
-                    <option value="2025" {{ request('year') == '2025' ? 'selected' : '' }}>2025</option>
                     <option value="2024" {{ request('year') == '2024' ? 'selected' : '' }}>2024</option>
+                    <option value="2025" {{ request('year') == '2025' ? 'selected' : '' }}>2025</option>
                 </select>
                 <select name="month" class="dropdown-btn">
                     <option value="">Semua Bulan</option>
+                    <option value="01" {{ request('month') == '01' ? 'selected' : '' }}>Januari</option>
+                    <option value="02" {{ request('month') == '02' ? 'selected' : '' }}>Februari</option>
+                    <option value="03" {{ request('month') == '03' ? 'selected' : '' }}>Maret</option>
+                    <option value="04" {{ request('month') == '04' ? 'selected' : '' }}>April</option>
+                    <option value="05" {{ request('month') == '05' ? 'selected' : '' }}>Mei</option>
+                    <option value="06" {{ request('month') == '06' ? 'selected' : '' }}>Juni</option>
                     <option value="07" {{ request('month') == '07' ? 'selected' : '' }}>Juli</option>
                     <option value="08" {{ request('month') == '08' ? 'selected' : '' }}>Agustus</option>
+                    <option value="09" {{ request('month') == '09' ? 'selected' : '' }}>September</option>
+                    <option value="10" {{ request('month') == '10' ? 'selected' : '' }}>Oktober</option>
+                    <option value="11" {{ request('month') == '11' ? 'selected' : '' }}>November</option>
+                    <option value="12" {{ request('month') == '12' ? 'selected' : '' }}>Desember</option>
                 </select>
 
                 <!-- Tombol Filter -->
