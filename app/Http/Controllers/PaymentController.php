@@ -97,7 +97,7 @@ class PaymentController extends Controller
                 'metode_bayar' => $paymentData['payment_method'],
                 'status' => $paymentData['status']
             ]);
-
+            
             // --- BAGIAN BARU: Simpan Laporan ---
             $kodeLaporan = Laporan::generateKodeLaporan();
             Laporan::create([

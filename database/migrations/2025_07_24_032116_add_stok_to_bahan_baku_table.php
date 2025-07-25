@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bahan_baku', function (Blueprint $table) {
-            $table->string('kode_bahan', 12)->primary();
-            $table->string('nama_bahan_baku', 50); 
-            $table->string('stok', 50);// Menambahkan kolom nama bahan baku
-            $table->timestamps();
+        Schema::table('bahan_baku', function (Blueprint $table) {
+            //
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bahan_baku');
+        Schema::table('bahan_baku', function (Blueprint $table) {
+            //
+        });
     }
 };

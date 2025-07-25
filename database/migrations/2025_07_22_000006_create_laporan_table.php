@@ -12,19 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('laporan', function (Blueprint $table) {
-            $table->string('kode_laporan', 50)->primary(); // Primary Key
-            $table->date('tgl_laporan')->nullable();
-            $table->integer('pendapatan')->nullable();
-            $table->string('kode_transaksi', 50); // NOT NULL as per SQL
+    $table->string('kode_laporan', 50)->primary(); // Primary Key
+    $table->date('tgl_laporan')->nullable();
+    $table->integer('pendapatan')->nullable();
+    $table->string('kode_transaksi', 50); // Foreign Key
 
-            $table->timestamps(); // Laravel's default created_at and updated_at
+    $table->timestamps(); // created_at & updated_at
 
-            // Unique Key (redundant if primary key, but kept for consistency with original SQL)
-            $table->unique('kode_laporan');
+    // Foreign Key constraint
+    $table->foreign('kode_transaksi')
+          ->references('kode_transaksi')
+          ->on('transaksi')
+          ->onDelete('cascade');
+});
 
-            // Foreign Key
-            $table->foreign('kode_transaksi')->references('kode_transaksi')->on('transaksi')->onDelete('cascade');
-        });
     }
 
     /**

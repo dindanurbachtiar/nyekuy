@@ -17,7 +17,7 @@ class BahanBakuController extends Controller
     {
         $request->validate([
             'kode_bahan' => 'required|unique:bahan_baku,kode_bahan',
-            'nama_bahan' => 'required',
+            'nama_bahan_baku' => 'required',
             'stok' => 'required|numeric',
         ]);
 
@@ -28,7 +28,7 @@ class BahanBakuController extends Controller
     public function update(Request $request, $kode_bahan)
     {
         $request->validate([
-            'nama_bahan' => 'required',
+            'nama_bahan_baku' => 'required',
             'stok' => 'required|numeric',
         ]);
 

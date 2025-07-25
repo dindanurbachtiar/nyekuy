@@ -11,6 +11,9 @@ class Transaksi extends Model
     use HasFactory;
 
     protected $table = 'transaksi';
+    protected $primaryKey = 'kode_transaksi';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'kode_transaksi',
@@ -20,8 +23,8 @@ class Transaksi extends Model
         'kembalian',
         'metode_bayar',
         'status',
-        'kode_pesanan', // Tambahkan ini jika transaksi terkait dengan pesanan
-        'id_pelayan'    // Tambahkan ini jika transaksi terkait dengan pelayan
+        'kode_pesanan',
+        'id_pelayan'
     ];
 
     protected $casts = [

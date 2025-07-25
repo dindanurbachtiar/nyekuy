@@ -414,7 +414,7 @@
                 @foreach($bahanBaku as $bahan)
                     <div class="table-row">
                         <div class="material-code">{{ $bahan->kode_bahan }}</div>
-                        <div class="material-name">{{ $bahan->nama_bahan }}</div>
+                        <div class="material-name">{{ $bahan->nama_bahan_baku }}</div>
                         <div class="material-qty">{{ $bahan->stok }}</div>
                         <div class="actions">
                             <button class="edit-btn" onclick="openEditMaterialModal('{{ $bahan->kode_bahan }}')">Edit</button>
@@ -446,7 +446,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Nama Bahan</label>
-                        <input type="text" class="form-input" name="nama_bahan" required>
+                        <input type="text" class="form-input" name="nama_bahan_baku" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">QTY</label>
@@ -475,7 +475,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Nama Bahan</label>
-                        <input type="text" class="form-input" id="editMaterialName" name="nama_bahan" required>
+                        <input type="text" class="form-input" id="editMaterialName" name="nama_bahan_baku" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">QTY</label>
@@ -511,7 +511,7 @@
             .then(data => {
                 console.log('Data diterima:', data);
                 document.getElementById('editMaterialCode').value = data.kode_bahan;
-                document.getElementById('editMaterialName').value = data.nama_bahan;
+                document.getElementById('editMaterialName').value = data.nama_bahan_baku;
                 document.getElementById('editMaterialQty').value = data.stok;
 
                 document.getElementById('editMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
