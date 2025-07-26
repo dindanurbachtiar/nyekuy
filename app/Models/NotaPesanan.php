@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use App\Models\Order;
-
+use App\Models\Transaksi;
+use App\Models\Laporan;
 class NotaPesanan extends Model
 {
     use HasFactory;
@@ -78,4 +79,13 @@ class NotaPesanan extends Model
     {
         return $this->tanggal_pesanan->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s');
     }
+    public function transaksi()
+    {
+        return $this->hasOne(Transaksi::class, 'kode_pesanan', 'kode_pesanan');
+    }
+
+    public function laporan()
+    {
+        return $this->hasOneThrough(Laporan::class, Transaksi::class, 'kode_pesanan', 'kode_transaksi', 'kode_pesanan', 'kode_transaksi');
+    }      
 }

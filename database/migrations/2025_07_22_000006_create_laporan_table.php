@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('laporan', function (Blueprint $table) {
-    $table->string('kode_laporan', 50)->primary(); // Primary Key
+    $table->string('kode_laporan', 50)->primary();
     $table->date('tgl_laporan')->nullable();
-    $table->integer('pendapatan')->nullable();
-    $table->string('kode_transaksi', 50); // Foreign Key
+    $table->decimal('pendapatan', 15, 2)->nullable();
+    $table->string('kode_transaksi', 50)->unique();
+    $table->timestamps();
 
-    $table->timestamps(); // created_at & updated_at
-
-    // Foreign Key constraint
     $table->foreign('kode_transaksi')
           ->references('kode_transaksi')
           ->on('transaksi')
           ->onDelete('cascade');
-});
+
+    $table->index('tgl_laporan');
+    });
 
     }
 

@@ -528,6 +528,7 @@
                 width: 95%;
                 margin: 20px;
             }
+            
         }
     </style>
 </head>
@@ -551,6 +552,7 @@
 
         <!-- Main Content -->
         <div class="main-content">
+        
             <!-- Menu Section -->
             <div class="menu-section">
                 <div class="menu-header">
@@ -564,46 +566,54 @@
                     <input type="text" class="search-input" placeholder="Cari Nama Menu/Kode Menu" id="searchInput">
                     <i class="fas fa-search search-icon"></i>
                 </div>
+                <!-- Tombol Pilih Kategori -->
+                <div style="margin-bottom: 20px;">
+                    <button onclick="showSeblak()">Seblak</button>
+                    <button onclick="showMinuman()">Minuman</button>
+                </div>
 
-                <table class="menu-table" id="menuTable">
+                                <!-- TABEL SEBLAK - dari bahan_baku -->
+               <table class="menu-table" id="seblakTable" style="display: none;">
                     <thead>
                         <tr>
-                            <th>NAMA MENU</th>
-                            <th>KODE MENU</th>
+                            <th>NAMA BAHAN</th>
+                            <th>STOK</th>
                             <th>HARGA</th>
-                            <th>AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if(isset($menus) && count($menus) > 0)
-                            @foreach($menus as $menu)
-                                <tr data-kode="{{ $menu->kode_menu }}" 
-                                    onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }})">
-                                    <td>{{ $menu->nama_menu }}</td>
-                                    <td>{{ $menu->kode_menu }}</td>
-                                    <td>Rp. {{ number_format($menu->harga, 0, ',', '.') }}</td>
-                                    <td>
-                                        <button class="edit-btn"
-                                            onclick="event.stopPropagation(); editMenu('{{ $menu->kode_menu }}', '{{ $menu->nama_menu }}', {{ $menu->harga }})">
-                                            Edit
-                                        </button>
-                                        <button class="delete-btn"
-                                            onclick="event.stopPropagation(); confirmDelete('{{ $menu->kode_menu }}')">
-                                            Hapus
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                <td colspan="4" style="text-align: center; padding: 20px;">
-                                    Tidak ada data menu. Silakan tambah menu baru.
-                                </td>
+                        @foreach($bahanBakus as $bahan)
+                            <tr onclick="selectMenu('{{ $bahan->nama_bahan_baku }}', '{{ $bahan->kode_bahan }}', {{ $bahan->harga }})">
+                                <td>{{ $bahan->nama_bahan_baku }}</td>
+                                <td>{{ $bahan->stok }}</td>
+                                <td>Rp. {{ number_format($bahan->harga, 0, ',', '.') }}</td>
                             </tr>
-                        @endif
+                        @endforeach
                     </tbody>
-
                 </table>
+
+
+                <!-- TABEL MINUMAN - dari menu_minuman -->
+                <table class="menu-table" id="minumanTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>NAMA MENU</th>
+                            <th>STOK</th>
+                            <th>HARGA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($menus as $menu)
+                            <tr onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }})">
+                                <td>{{ $menu->nama_menu }}</td>
+                                <td>{{ $menu->stok }}</td>
+                                <td>Rp. {{ number_format($menu->harga, 0, ',', '.') }}</td>
+                               
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
             </div>
 
             <!-- Order Section -->
@@ -651,7 +661,7 @@
         </div>
     </div>
 
-    <!-- Add Menu Modal -->
+    <!-- Add Menu Modal
     <div class="modal-overlay" id="addMenuModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -684,8 +694,9 @@
             </div>
         </div>
     </div>
+     -->
 
-    <!-- Edit Menu Modal -->
+    <!-- Edit Menu Modal
     <div class="modal-overlay" id="editMenuModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -714,6 +725,7 @@
             </div>
         </div>
     </div>
+     -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -735,6 +747,16 @@
         // Update date every second
         setInterval(updateDateTime, 1000);
         updateDateTime(); // Initial call
+
+        function showSeblak() {
+            document.getElementById('seblakTable').style.display = 'table';
+            document.getElementById('minumanTable').style.display = 'none';
+        }
+
+        function showMinuman() {
+            document.getElementById('seblakTable').style.display = 'none';
+            document.getElementById('minumanTable').style.display = 'table';
+        }
 
         function goBack() {
             window.history.back();

@@ -6,26 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('transaksi', function (Blueprint $table) {
-            $table->string('kode_transaksi', 50)->primary();
-            $table->date('tgl_bayar')->nullable();
-            $table->integer('total_bayar')->nullable();
-            $table->string('kode_pesanan', 50)->nullable(); // Foreign key to 'nota_pesanan' table
-            $table->string('id_pelayan', 50)->nullable(); // Foreign key to 'pelayan' table
-            $table->decimal('jumlah_bayar', 15, 2)->nullable();
-            $table->decimal('kembalian', 15, 2)->default(0.00);
-            $table->string('metode_bayar', 255)->default('tunai');
+            $table->string('kode_transaksi', 50)->primary(); // ID unik transaksi
+            $table->date('tgl_bayar')->nullable(); // Tanggal bayar
+            $table->decimal('total_bayar', 15, 2)->nullable(); // Total semua pesanan
+            $table->string('kode_pesanan')->nullable();
+            $table->string('id_pelayan', 50)->nullable(); // Foreign Key
+            $table->decimal('jumlah_bayar', 15, 2)->nullable(); // Uang dibayarkan pelanggan
+            $table->decimal('kembalian', 15, 2)->default(0.00); // Kembalian
+            $table->string('metode_bayar', 255)->default('tunai'); // cash, qris, dll
             $table->enum('status', ['pending', 'completed', 'failed'])->default('completed');
-            $table->timestamps(); // Laravel's default created_at and updated_at
-
-            // Indexes
-            $table->index('kode_transaksi', 'idx_transaksi_kode'); // Redundant if primary key, but kept for consistency with original SQL
-            $table->index('tgl_bayar', 'idx_transaksi_tgl_bayar');
+            $table->timestamps();
 
             // Foreign Keys
             $table->foreign('kode_pesanan')->references('kode_pesanan')->on('nota_pesanan')->onDelete('set null');
@@ -33,9 +26,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('transaksi');

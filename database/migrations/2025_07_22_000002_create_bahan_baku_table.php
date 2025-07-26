@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('bahan_baku', function (Blueprint $table) {
             $table->string('kode_bahan', 12)->primary();
             $table->string('nama_bahan_baku', 50); 
-            $table->string('stok', 50);// Menambahkan kolom nama bahan baku
+            $table->integer('stok')->default(0);
+            $table->integer('harga')->default(0); // Tambahan kolom harga
             $table->timestamps();
         });
     }

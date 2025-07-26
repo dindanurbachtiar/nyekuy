@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\BahanBaku;
 use App\Models\NotaPesanan;
 use App\Models\Laporan;
 use App\Models\Transaksi;
+use App\Models\DetailPesanan;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +22,8 @@ class OrderController extends Controller
     public function index()
     {
         $menus = Menu::all();
-        return view('modules.orders', compact('menus'));
+        $bahanBakus = BahanBaku::all(); 
+        return view('modules.orders', compact('menus','bahanBakus'));
     }
 
     public function store(Request $request): JsonResponse
@@ -121,7 +124,6 @@ public function processOrder(Request $request): RedirectResponse | JsonResponse
     try {
         DB::beginTransaction();
 
-        // Validasi input
         $request->validate([
             'nama_pelanggan' => 'required|string|max:255',
             'items' => 'required|array|min:1',
@@ -131,55 +133,88 @@ public function processOrder(Request $request): RedirectResponse | JsonResponse
             'total' => 'required|numeric|min:0'
         ]);
 
+        $kodePesanan = NotaPesanan::generateKodePesanan();
         $kodeTransaksi = Transaksi::generateKodeTransaksi();
+        $tanggalSekarang = Carbon::now('Asia/Jakarta');
+
+        // Simpan nota header
+        $nota = NotaPesanan::create([
+            'kode_pesanan' => $kodePesanan,
+            'nama_pelanggan' => $request->nama_pelanggan,
+            'tanggal_pesanan' => $tanggalSekarang,
+            'status' => 'pending',
+        ]);
+
         $totalPendapatan = 0;
 
-        // Simpan item pesanan ke NotaPesanan
         foreach ($request->items as $item) {
-            $kodePesanan = NotaPesanan::generateKodePesanan();
+            $menu = BahanBaku::where('kode_bahan', $item['kode_menu'])->first();
+            $tipeMenu = 'bahan_baku';
 
-            $menu = Menu::where('kode_menu', $item['kode_menu'])->first();
             if (!$menu) {
-                throw new \Exception("Menu dengan kode {$item['kode_menu']} tidak ditemukan");
+                $menu = Menu::where('kode_menu', $item['kode_menu'])->first();
+                $tipeMenu = 'menu';
+            }
+
+            if (!$menu) {
+                throw new \Exception("Item dengan kode {$item['kode_menu']} tidak ditemukan");
             }
 
             $hargaSatuan = $menu->harga;
             $totalHarga = $hargaSatuan * $item['quantity'];
             $totalPendapatan += $totalHarga;
 
-            NotaPesanan::create([
+            // Simpan detail pesanan
+            DetailPesanan::create([
                 'kode_pesanan' => $kodePesanan,
-                'nama_pelanggan' => $request->nama_pelanggan,
-                'nama_menu' => $item['nama_menu'],
-                'kode_menu' => $item['kode_menu'],
+                'kode_menu' => $tipeMenu === 'menu' ? $item['kode_menu'] : null,
+                'kode_bahan' => $tipeMenu === 'bahan_baku' ? $item['kode_menu'] : null,
                 'jumlah_pesanan' => $item['quantity'],
                 'harga_satuan' => $hargaSatuan,
                 'total_harga' => $totalHarga,
-                'tanggal_pesanan' => Carbon::now('Asia/Jakarta'),
-                'status' => 'pending'
+            ]);
+
+            // Kurangi stok
+            if ($tipeMenu === 'menu') {
+                if ($menu->stok < $item['quantity']) {
+                    throw new \Exception("Stok menu minuman '{$menu->nama_menu}' tidak mencukupi");
+                }
+            } else {
+                if ($menu->stok < $item['quantity']) {
+                    throw new \Exception("Stok bahan baku '{$menu->nama_bahan}' tidak mencukupi");
+                }
+            }
+            $menu->stok -= $item['quantity'];
+            $menu->save();
+        }
+
+        // Transaksi
+        $existingTransaksi = Transaksi::where('kode_pesanan', $kodePesanan)->first();
+        if ($kodePesanan && !$existingTransaksi) {
+            Transaksi::create([
+                'kode_transaksi' => $kodeTransaksi,
+                'tgl_bayar' => $tanggalSekarang->toDateString(),
+                'total_bayar' => $totalPendapatan,
+                'kode_pesanan' => $kodePesanan,
+                'jumlah_bayar' => $totalPendapatan,
+                'kembalian' => 0,
+                'metode_bayar' => 'tunai',
+                'status' => 'completed'
             ]);
         }
 
-        // Simpan transaksi terlebih dahulu agar bisa direferensikan oleh laporan
-        Transaksi::create([
-            'kode_transaksi' => $kodeTransaksi,
-            'tgl_bayar' => Carbon::now('Asia/Jakarta')->toDateString(),
-            'total_bayar' => $totalPendapatan,
-            'kode_pesanan' => null, // atau sesuaikan jika diperlukan
-            'jumlah_bayar' => $totalPendapatan,
-            'kembalian' => 0,
-            'metode_bayar' => 'tunai',
-            'status' => 'completed'
-        ]);
 
-        // Simpan laporan setelah transaksi berhasil dibuat
-        $kodeLaporan = 'LAP-' . date('ymdHis') . '-' . rand(100, 999);
-        Laporan::create([
-            'kode_laporan' => $kodeLaporan,
-            'tgl_laporan' => Carbon::now('Asia/Jakarta')->toDateString(),
-            'pendapatan' => $totalPendapatan,
-            'kode_transaksi' => $kodeTransaksi
-        ]);
+        // Laporan
+        $existingLaporan = Laporan::where('kode_transaksi', $kodeTransaksi)->first();
+        if (!$existingLaporan) {
+            $kodeLaporan = 'LAP-' . date('ymdHis') . '-' . rand(100, 999);
+            Laporan::create([
+                'kode_laporan' => $kodeLaporan,
+                'tgl_laporan' => $tanggalSekarang->toDateString(),
+                'pendapatan' => $totalPendapatan,
+                'kode_transaksi' => $kodeTransaksi
+            ]);
+        }
 
         DB::commit();
 

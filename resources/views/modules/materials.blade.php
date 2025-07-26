@@ -402,33 +402,90 @@
                 </div>
             </div>
         </div>
+         <div style="margin-bottom: 20px;">
+                    <button onclick="showSeblak()">Bahan Baku Seblak</button>
+                    <button onclick="showMinuman()">Bahan Baku Minuma</button>
+                </div>
 
-        <div class="main-content">
-            <div class="table-header">
-                <div>KODE_BAHAN</div>
-                <div>NAMA BAHAN</div>
-                <div>QTY</div>
-                <div>AKSI</div>
-            </div>
-            <div id="materialsTable">
-                @foreach($bahanBaku as $bahan)
-                    <div class="table-row">
-                        <div class="material-code">{{ $bahan->kode_bahan }}</div>
-                        <div class="material-name">{{ $bahan->nama_bahan_baku }}</div>
-                        <div class="material-qty">{{ $bahan->stok }}</div>
-                        <div class="actions">
-                            <button class="edit-btn" onclick="openEditMaterialModal('{{ $bahan->kode_bahan }}')">Edit</button>
-                            <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
-                            </form>
+       <!-- TABEL BAHAN BAKU SEBLAK -->
+            <!-- TABEL BAHAN BAKU SEBLAK -->
+            <div id="tableSeblak">
+                <h3 style="margin-top: 20px;">Bahan Baku Seblak</h3>
+                <table class="menu-table">
+                    <thead>
+                        <tr>
+                            <th>KODE</th>
+                            <th>NAMA BAHAN</th>
+                            <th>STOK</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($bahanBakus as $bahan)
+                        <div class="table-row">
+                            <div class="material-code">{{ $bahan->kode_bahan }}</div>
+                            <div class="material-name">{{ $bahan->nama_bahan_baku }}</div>
+                            <div class="material-qty">{{ $bahan->stok }}</div>
+                            <div class="actions">
+                                <button class="edit-btn" onclick="openEditMaterialModal('{{ $bahan->kode_bahan }}')">Edit</button>
+                                <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-                @endforeach
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </div>
+
+            <!-- TABEL MENU MINUMAN -->
+            <div id="tableMinuman" style="display: none;">
+                <h3 style="margin-top: 40px;">Menu Minuman</h3>
+                <table class="menu-table">
+                    <thead>
+                        <tr>
+                            <th>NAMA MENU</th>
+                            <th>STOK</th>
+                            <th>HARGA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <div id="materialsTable">
+                            @foreach($menus as $menu)
+                            <div class="table-row">
+                                <div class="material-code">{{ $menu->kode_menu }}</div>
+                                <div class="material-name">{{ $menu->nama_menu }}</div>
+                                <div class="material-qty">{{ $menu->stok }}</div>
+                                <div class="actions">
+                                    <button class="edit-btn" onclick="openEditMaterialModal('{{ $menu->kode_menu }}')">Edit</button>
+                                    <form action="/menu-baku/{{ $menu->kode_menu }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </tbody>
+                </table>
+            </div>
+
+            <script>
+            function showSeblak() {
+                document.getElementById("tableSeblak").style.display = "block";
+                document.getElementById("tableMinuman").style.display = "none";
+            }
+
+            function showMinuman() {
+                document.getElementById("tableSeblak").style.display = "none";
+                document.getElementById("tableMinuman").style.display = "block";
+            }
+        </script>
+
+
 
     {{-- Modal Tambah --}}
     <div class="modal-overlay" id="addMaterialModal">

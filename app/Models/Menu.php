@@ -9,7 +9,7 @@ class Menu extends Model
 {
     use HasFactory;
 
-    protected $table = 'menu';
+    protected $table = 'menu_minuman';
     protected $primaryKey = 'kode_menu';
     public $incrementing = false;
     protected $keyType = 'string';

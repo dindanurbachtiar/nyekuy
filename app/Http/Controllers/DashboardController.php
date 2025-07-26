@@ -18,7 +18,7 @@ class DashboardController extends Controller
                     'color' => 'blue'
                 ],
                 [
-                    'title' => 'Bahan Baku',
+                    'title' => 'Kelola Stok',
                     'icon' => 'fas fa-boxes',
                     'route' => 'materials.index',
                     'color' => 'orange'

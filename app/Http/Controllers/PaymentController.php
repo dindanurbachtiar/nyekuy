@@ -17,7 +17,11 @@ class PaymentController extends Controller
         $orderTotal = $request->input('order_total');
         $quickAmounts = [10000, 20000, 50000, 100000]; // bisa custom
 
-        return view('payment.form', compact('orderTotal', 'quickAmounts'));
+         return view('payment.form', [
+        'orderTotal' => $orderTotal,
+        'quickAmounts' => $quickAmounts,
+        'kode_pesanan' => $request->kode_pesanan
+    ]);
     }
 
     public function calculateChange(Request $request)
@@ -64,7 +68,8 @@ class PaymentController extends Controller
             'payment_method' => $request->payment_method,
             'transaction_id' => $kodeTransaksi,
             'status' => 'completed',
-            'payment_date' => Carbon::now('Asia/Jakarta')
+            'payment_date' => Carbon::now('Asia/Jakarta'),
+            'kode_pesanan' => $request->kode_pesanan // tambahkan ini
         ];
 
         // Proses pembayaran dan simpan ke database
@@ -90,6 +95,7 @@ class PaymentController extends Controller
             // Simpan transaksi ke database
             $transaksi = Transaksi::create([
                 'kode_transaksi' => $paymentData['transaction_id'],
+                'kode_pesanan' => $paymentData['kode_pesanan'],
                 'tgl_bayar' => Carbon::parse($paymentData['payment_date'])->setTimezone('Asia/Jakarta'),
                 'total_bayar' => $paymentData['order_total'],
                 'jumlah_bayar' => $paymentData['paid_amount'],
