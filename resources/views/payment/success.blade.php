@@ -22,6 +22,15 @@
             <span>ID Transaksi:</span>
             <span>{{ $paymentData['transaction_id'] }}</span>
         </div>
+        <!-- Info Pelanggan -->
+        <div class="mb-2 d-flex justify-content-between">
+            <span>Nama Pelanggan:</span>
+            <span>{{ $paymentData['nama_pelanggan'] ?? '-' }}</span>
+        </div>
+        <div class="mb-2 d-flex justify-content-between">
+            <span>Kode Pesanan:</span>
+            <span>{{ $paymentData['kode_pesanan'] ?? '-' }}</span>
+        </div>
         <div class="mb-2 d-flex justify-content-between">
             <span>Total Pesanan:</span>
             <span>Rp {{ number_format($paymentData['order_total'], 0, ',', '.') }}</span>

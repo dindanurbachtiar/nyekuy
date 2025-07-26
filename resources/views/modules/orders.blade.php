@@ -99,23 +99,6 @@
             color: #333;
         }
 
-        .add-btn {
-            width: 40px;
-            height: 40px;
-            background: #8B1538;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .add-btn:hover {
-            background: #A91B47;
-            transform: scale(1.05);
-        }
-
         .search-container {
             position: relative;
             margin-bottom: 25px;
@@ -330,6 +313,51 @@
         }
 
         .order-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .show-seblak {
+            background: #8B1538;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .show-seblak:hover {
+            background: #A91B47;
+        }
+
+        .show-seblak:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .show-minuman {
+
+            background: #8B1538;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .show-minuman:hover {
+            background: #A91B47;
+        }
+
+        .show-minuman:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
@@ -555,12 +583,6 @@
         
             <!-- Menu Section -->
             <div class="menu-section">
-                <div class="menu-header">
-                    <h2 class="menu-title">Menu</h2>
-                    <button class="add-btn" onclick="openAddMenuModal()">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
 
                 <div class="search-container">
                     <input type="text" class="search-input" placeholder="Cari Nama Menu/Kode Menu" id="searchInput">
@@ -568,11 +590,11 @@
                 </div>
                 <!-- Tombol Pilih Kategori -->
                 <div style="margin-bottom: 20px;">
-                    <button onclick="showSeblak()">Seblak</button>
-                    <button onclick="showMinuman()">Minuman</button>
+                    <button class="show-seblak" onclick="showSeblak()">Seblak</button>
+                    <button class="show-minuman" onclick="showMinuman()">Minuman</button>
                 </div>
 
-                                <!-- TABEL SEBLAK - dari bahan_baku -->
+                <!-- TABEL SEBLAK - dari bahan_baku -->
                <table class="menu-table" id="seblakTable" style="display: none;">
                     <thead>
                         <tr>
@@ -660,72 +682,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Add Menu Modal
-    <div class="modal-overlay" id="addMenuModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="modal-back-btn" onclick="closeAddMenuModal()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h3 class="modal-title">Tambah Menu</h3>
-            </div>
-            <div class="modal-body">
-                <div id="alertContainer"></div>
-                <form id="addMenuForm" onsubmit="submitNewMenu(event)">
-                    <div class="form-group">
-                        <label class="form-label">Kode Menu</label>
-                        <input type="text" class="form-input" id="menuCode" placeholder="Contoh: A009" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Nama Menu</label>
-                        <input type="text" class="form-input" id="menuName" placeholder="Contoh: Kerupuk Oren" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Harga</label>
-                        <input type="number" class="form-input" id="menuPrice" placeholder="Contoh: 2000" required
-                            min="0">
-                    </div>
-
-                    <button type="submit" class="modal-submit-btn">Tambah</button>
-                </form>
-            </div>
-        </div>
-    </div>
-     -->
-
-    <!-- Edit Menu Modal
-    <div class="modal-overlay" id="editMenuModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="modal-back-btn" onclick="closeEditMenuModal()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h3 class="modal-title">Edit Menu</h3>
-            </div>
-            <div class="modal-body">
-                <div id="editAlertContainer"></div>
-                <form id="editMenuForm" onsubmit="submitEditMenu(event)">
-                    <input type="hidden" id="editMenuCode">
-
-                    <div class="form-group">
-                        <label class="form-label">Nama Menu</label>
-                        <input type="text" class="form-input" id="editMenuName" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Harga</label>
-                        <input type="number" class="form-input" id="editMenuPrice" required min="0">
-                    </div>
-
-                    <button type="submit" class="modal-submit-btn">Update</button>
-                </form>
-            </div>
-        </div>
-    </div>
-     -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

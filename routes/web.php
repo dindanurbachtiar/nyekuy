@@ -17,7 +17,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Middleware untuk pengguna yang sudah login
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:pelayan')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -50,6 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/bahan-baku/get/{kode_bahan}', [BahanBakuController::class, 'getOne']);
     Route::put('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'update']);
     Route::delete('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'destroy']);
+    Route::post('/menu-minuman', [BahanBakuController::class, 'storeMinuman']);
+    Route::put('/menu-minuman/{kode_menu}', [BahanBakuController::class, 'updateMinuman']);
+    Route::delete('/menu-minuman/{kode_menu}', [BahanBakuController::class, 'destroyMinuman']);
+
 
     /**
      * Payment

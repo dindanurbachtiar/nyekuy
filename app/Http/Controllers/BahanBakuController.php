@@ -72,4 +72,42 @@ class BahanBakuController extends Controller
 
         return redirect()->route('materials.index')->with('success', 'Bahan baku berhasil dihapus');
     }
+
+    // Tambah menu minuman
+    public function storeMinuman(Request $request)
+    {
+        $validated = $request->validate([
+            'kode_menu'      => 'required|unique:menus,kode_menu',
+            'nama_menu'      => 'required|string|max:255',
+            'stok'           => 'required|numeric|min:0',
+        ]);
+
+        Menu::create($validated);
+
+        return redirect()->back()->with('success', 'Menu minuman berhasil ditambahkan');
+    }
+
+    // Edit menu minuman
+    public function updateMinuman(Request $request, $kode_menu)
+    {
+        $validated = $request->validate([
+            'nama_menu' => 'required|string|max:255',
+            'stok'      => 'required|numeric|min:0',
+        ]);
+
+        $menu = Menu::findOrFail($kode_menu);
+        $menu->update($validated);
+
+        return redirect()->back()->with('success', 'Menu minuman berhasil diperbarui');
+    }
+
+    // Hapus menu minuman
+    public function destroyMinuman($kode_menu)
+    {
+        $menu = Menu::findOrFail($kode_menu);
+        $menu->delete();
+
+        return redirect()->back()->with('success', 'Menu minuman berhasil dihapus');
+    }
+
 }

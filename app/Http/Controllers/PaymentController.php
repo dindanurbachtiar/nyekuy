@@ -20,7 +20,8 @@ class PaymentController extends Controller
          return view('payment.form', [
         'orderTotal' => $orderTotal,
         'quickAmounts' => $quickAmounts,
-        'kode_pesanan' => $request->kode_pesanan
+        'kode_pesanan' => $request->kode_pesanan,
+        'nama_pelanggan' => $request->nama_pelanggan
     ]);
     }
 
@@ -69,7 +70,8 @@ class PaymentController extends Controller
             'transaction_id' => $kodeTransaksi,
             'status' => 'completed',
             'payment_date' => Carbon::now('Asia/Jakarta'),
-            'kode_pesanan' => $request->kode_pesanan // tambahkan ini
+            'kode_pesanan' => $request->kode_pesanan,
+            'nama_pelanggan' => $request->nama_pelanggan
         ];
 
         // Proses pembayaran dan simpan ke database
@@ -96,6 +98,7 @@ class PaymentController extends Controller
             $transaksi = Transaksi::create([
                 'kode_transaksi' => $paymentData['transaction_id'],
                 'kode_pesanan' => $paymentData['kode_pesanan'],
+                'id_pelayan' => auth()->guard('pelayan')->user()->id_pelayan,
                 'tgl_bayar' => Carbon::parse($paymentData['payment_date'])->setTimezone('Asia/Jakarta'),
                 'total_bayar' => $paymentData['order_total'],
                 'jumlah_bayar' => $paymentData['paid_amount'],
@@ -103,6 +106,7 @@ class PaymentController extends Controller
                 'metode_bayar' => $paymentData['payment_method'],
                 'status' => $paymentData['status']
             ]);
+
             
             // --- BAGIAN BARU: Simpan Laporan ---
             $kodeLaporan = Laporan::generateKodeLaporan();

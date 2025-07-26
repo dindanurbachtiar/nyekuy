@@ -12,9 +12,37 @@
             <h1 class="h5 m-0">Pembayaran Tunai</h1>
         </div>
 
+        @php
+            $nama = $nama_pelanggan ?? session('nama_pelanggan') ?? request('nama_pelanggan');
+            $kode = $kode_pesanan ?? session('kode_pesanan') ?? request('kode_pesanan');
+        @endphp        
+
         <!-- Form -->
         <form action="{{ route('payment.process') }}" method="POST">
             @csrf
+
+            <!-- Nama Pelanggan -->
+            @if($nama)
+            <div class="mb-3">
+                <label class="form-label">Nama Pelanggan</label>
+                <div class="form-control bg-light">
+                    {{ $nama }}
+                </div>
+                <input type="hidden" name="nama_pelanggan" value="{{ $nama }}">
+            </div>
+            @endif
+
+            <!-- Kode Pesanan -->
+            @if($kode)
+            <div class="mb-3">
+                <label class="form-label">Kode Pesanan</label>
+                <div class="form-control bg-light">
+                    {{ $kode }}
+                </div>
+                <input type="hidden" name="kode_pesanan" value="{{ $kode }}">
+            </div>
+            @endif
+
 
             <!-- Total Pesanan -->
             <div class="mb-3">

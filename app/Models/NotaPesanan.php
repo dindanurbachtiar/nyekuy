@@ -21,7 +21,7 @@ class NotaPesanan extends Model
         'nama_menu',
         'kode_menu',
         'jumlah_pesanan',
-        // 'id_pelayan', // <<< Hapus baris ini
+        'id_pelayan', 
         'harga_satuan',
         'total_harga',
         'tanggal_pesanan',

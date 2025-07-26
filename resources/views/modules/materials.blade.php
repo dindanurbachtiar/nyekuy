@@ -38,6 +38,14 @@
             gap: 20px;
         }
 
+        .menu-section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+
         .back-btn {
             width: 40px;
             height: 40px;
@@ -181,6 +189,52 @@
             color: #666;
         }
 
+        .show-seblak {
+            background: #8B1538;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .show-seblak:hover {
+            background: #A91B47;
+        }
+
+        .show-seblak:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .show-minuman {
+
+            background: #8B1538;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .show-minuman:hover {
+            background: #A91B47;
+        }
+
+        .show-minuman:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+
         .edit-btn {
             background: #8B1538;
             color: white;
@@ -300,6 +354,7 @@
             color: #333;
             margin-bottom: 10px;
         }
+        
 
         .form-input {
             width: 100%;
@@ -402,91 +457,67 @@
                 </div>
             </div>
         </div>
-         <div style="margin-bottom: 20px;">
-                    <button onclick="showSeblak()">Bahan Baku Seblak</button>
-                    <button onclick="showMinuman()">Bahan Baku Minuma</button>
+
+
+        <!-- Menu Section -->
+        <div class="menu-section">
+            <div style="margin-bottom: 20px;">
+                <button class="show-seblak" onclick="showSeblak()">Bahan Baku Seblak</button>
+                <button class="show-minuman" onclick="showMinuman()">Bahan Baku Minuman</button>
+            </div>
+            <!-- TABEL BAHAN BAKU SEBLAK -->
+            <div id="tableSeblak" style="display: block;">
+                <div class="table-header">
+                    <div>KODE</div>
+                    <div>NAMA BAHAN</div>
+                    <div>STOK</div>
+                    <div>AKSI</div>
                 </div>
 
-       <!-- TABEL BAHAN BAKU SEBLAK -->
+                @foreach($bahanBakus as $bahan)
+                <div class="table-row">
+                    <div class="material-code">{{ $bahan->kode_bahan }}</div>
+                    <div class="material-name">{{ $bahan->nama_bahan_baku }}</div>
+                    <div class="material-qty">{{ $bahan->stok }}</div>
+                    <div class="actions">
+                        <button class="edit-btn" onclick="openEditMaterialModal(this)"data-kode="{{ $bahan->kode_bahan }}"data-nama="{{ $bahan->nama_bahan_baku }}"data-stok="{{ $bahan->stok }}">Edit</button>
+                        <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
             <!-- TABEL BAHAN BAKU SEBLAK -->
-            <div id="tableSeblak">
-                <h3 style="margin-top: 20px;">Bahan Baku Seblak</h3>
-                <table class="menu-table">
-                    <thead>
-                        <tr>
-                            <th>KODE</th>
-                            <th>NAMA BAHAN</th>
-                            <th>STOK</th>
-                            <th>AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($bahanBakus as $bahan)
-                        <div class="table-row">
-                            <div class="material-code">{{ $bahan->kode_bahan }}</div>
-                            <div class="material-name">{{ $bahan->nama_bahan_baku }}</div>
-                            <div class="material-qty">{{ $bahan->stok }}</div>
-                            <div class="actions">
-                                <button class="edit-btn" onclick="openEditMaterialModal('{{ $bahan->kode_bahan }}')">Edit</button>
-                                <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
-                                </form>
-                            </div>
-                        </div>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- TABEL MENU MINUMAN -->
             <div id="tableMinuman" style="display: none;">
-                <h3 style="margin-top: 40px;">Menu Minuman</h3>
-                <table class="menu-table">
-                    <thead>
-                        <tr>
-                            <th>NAMA MENU</th>
-                            <th>STOK</th>
-                            <th>HARGA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <div id="materialsTable">
-                            @foreach($menus as $menu)
-                            <div class="table-row">
-                                <div class="material-code">{{ $menu->kode_menu }}</div>
-                                <div class="material-name">{{ $menu->nama_menu }}</div>
-                                <div class="material-qty">{{ $menu->stok }}</div>
-                                <div class="actions">
-                                    <button class="edit-btn" onclick="openEditMaterialModal('{{ $menu->kode_menu }}')">Edit</button>
-                                    <form action="/menu-baku/{{ $menu->kode_menu }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
-                                    </form>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </tbody>
-                </table>
+                <div class="table-header">
+                    <div>NAMA MINUMAN</div>
+                    <div>STOK</div>
+                    <div>HARGA</div>
+                    <div>AKSI</div>
+                </div>
+
+                @foreach($menus as $menu)
+                <div class="table-row">
+                    <div class="material-code">{{ $menu->kode_menu }}</div>
+                    <div class="material-name">{{ $menu->nama_menu }}</div>
+                    <div class="material-qty">{{ $menu->stok }}</div>
+                    <div class="actions">
+                        <button class="edit-btn" onclick="openEditMaterialModal(this)"data-kode="{{ $menu->kode_menu }}"data-nama="{{ $menu->nama_menu }}"data-stok="{{ $menu->stok }}">Edit</button>
+                        <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                @endforeach
             </div>
-
-            <script>
-            function showSeblak() {
-                document.getElementById("tableSeblak").style.display = "block";
-                document.getElementById("tableMinuman").style.display = "none";
-            }
-
-            function showMinuman() {
-                document.getElementById("tableSeblak").style.display = "none";
-                document.getElementById("tableMinuman").style.display = "block";
-            }
-        </script>
-
-
-
+        </div>
+        
     {{-- Modal Tambah --}}
     <div class="modal-overlay" id="addMaterialModal">
         <div class="modal-content">
@@ -551,6 +582,15 @@
 
     {{-- Script --}}
     <script>
+        function showSeblak() {
+            document.getElementById('tableSeblak').style.display = 'block';
+            document.getElementById('tableMinuman').style.display = 'none';
+        }
+
+        function showMinuman() {
+            document.getElementById('tableSeblak').style.display = 'none';
+            document.getElementById('tableMinuman').style.display = 'block';
+        }
     function openAddMaterialModal() {
         document.getElementById('addMaterialModal').classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -561,29 +601,28 @@
         document.body.style.overflow = 'auto';
     }
 
-    function openEditMaterialModal(kode) {
-        console.log('Klik Edit:', kode);
-        fetch(`/bahan-baku/get/${kode}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log('Data diterima:', data);
-                document.getElementById('editMaterialCode').value = data.kode_bahan;
-                document.getElementById('editMaterialName').value = data.nama_bahan_baku;
-                document.getElementById('editMaterialQty').value = data.stok;
+    function openEditMaterialModal(button) {
+        const kode = button.getAttribute("data-kode");
+        const nama = button.getAttribute("data-nama");
+        const stok = button.getAttribute("data-stok");
 
-                document.getElementById('editMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
-                document.getElementById('deleteMaterialForm').action = `/bahan-baku/${data.kode_bahan}`;
+        document.getElementById("editMaterialCode").value = kode;
+        document.getElementById("editMaterialName").value = nama;
+        document.getElementById("editMaterialQty").value = stok;
 
-                document.getElementById('editMaterialModal').classList.add('active');
-                document.body.style.overflow = 'hidden';
-            });
+        document.getElementById("editMaterialForm").action = "/bahan-baku/" + kode;
+        document.getElementById("deleteMaterialForm").action = "/bahan-baku/" + kode;
+
+        document.getElementById("editMaterialModal").style.display = "flex";
+        document.body.style.overflow = "hidden";
     }
+
 
     function closeEditMaterialModal() {
-        document.getElementById('editMaterialModal').classList.remove('active');
+        document.getElementById("editMaterialModal").style.display = "none";
         document.body.style.overflow = 'auto';
     }
-
+    
     // Escape modal
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {

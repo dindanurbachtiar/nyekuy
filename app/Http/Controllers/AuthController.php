@@ -31,7 +31,7 @@ class AuthController extends Controller
             'password' => $request->password,
         ];
 
-        if (Auth::attempt($credentials, $request->filled('remember'))) {
+        if (Auth::guard('pelayan')->attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }
@@ -39,12 +39,12 @@ class AuthController extends Controller
         return back()
     ->withErrors(['username' => trans('auth.failed')])
     ->withInput($request->except('password'));
- // ✅ Diperbaiki: tanpa redirectTo()
+
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('pelayan')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');

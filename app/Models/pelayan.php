@@ -11,6 +11,7 @@ class Pelayan extends Authenticatable
 
     protected $table = 'pelayan';
     protected $primaryKey = 'id_pelayan';
+     public $incrementing = false;
     public $timestamps = false;
 
     protected $fillable = [

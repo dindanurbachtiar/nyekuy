@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -119,170 +120,152 @@ class OrderController extends Controller
 
         return response()->json($menus);
     }
-public function processOrder(Request $request): RedirectResponse | JsonResponse
-{
-    try {
-        DB::beginTransaction();
-
-        $request->validate([
-            'nama_pelanggan' => 'required|string|max:255',
-            'items' => 'required|array|min:1',
-            'items.*.kode_menu' => 'required|string',
-            'items.*.nama_menu' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'total' => 'required|numeric|min:0'
-        ]);
-
-        $kodePesanan = NotaPesanan::generateKodePesanan();
-        $kodeTransaksi = Transaksi::generateKodeTransaksi();
-        $tanggalSekarang = Carbon::now('Asia/Jakarta');
-
-        // Simpan nota header
-        $nota = NotaPesanan::create([
-            'kode_pesanan' => $kodePesanan,
-            'nama_pelanggan' => $request->nama_pelanggan,
-            'tanggal_pesanan' => $tanggalSekarang,
-            'status' => 'pending',
-        ]);
-
-        $totalPendapatan = 0;
-
-        foreach ($request->items as $item) {
-            $menu = BahanBaku::where('kode_bahan', $item['kode_menu'])->first();
-            $tipeMenu = 'bahan_baku';
-
-            if (!$menu) {
-                $menu = Menu::where('kode_menu', $item['kode_menu'])->first();
-                $tipeMenu = 'menu';
-            }
-
-            if (!$menu) {
-                throw new \Exception("Item dengan kode {$item['kode_menu']} tidak ditemukan");
-            }
-
-            $hargaSatuan = $menu->harga;
-            $totalHarga = $hargaSatuan * $item['quantity'];
-            $totalPendapatan += $totalHarga;
-
-            // Simpan detail pesanan
-            DetailPesanan::create([
-                'kode_pesanan' => $kodePesanan,
-                'kode_menu' => $tipeMenu === 'menu' ? $item['kode_menu'] : null,
-                'kode_bahan' => $tipeMenu === 'bahan_baku' ? $item['kode_menu'] : null,
-                'jumlah_pesanan' => $item['quantity'],
-                'harga_satuan' => $hargaSatuan,
-                'total_harga' => $totalHarga,
-            ]);
-
-            // Kurangi stok
-            if ($tipeMenu === 'menu') {
-                if ($menu->stok < $item['quantity']) {
-                    throw new \Exception("Stok menu minuman '{$menu->nama_menu}' tidak mencukupi");
-                }
-            } else {
-                if ($menu->stok < $item['quantity']) {
-                    throw new \Exception("Stok bahan baku '{$menu->nama_bahan}' tidak mencukupi");
-                }
-            }
-            $menu->stok -= $item['quantity'];
-            $menu->save();
-        }
-
-        // Transaksi
-        $existingTransaksi = Transaksi::where('kode_pesanan', $kodePesanan)->first();
-        if ($kodePesanan && !$existingTransaksi) {
-            Transaksi::create([
-                'kode_transaksi' => $kodeTransaksi,
-                'tgl_bayar' => $tanggalSekarang->toDateString(),
-                'total_bayar' => $totalPendapatan,
-                'kode_pesanan' => $kodePesanan,
-                'jumlah_bayar' => $totalPendapatan,
-                'kembalian' => 0,
-                'metode_bayar' => 'tunai',
-                'status' => 'completed'
-            ]);
-        }
-
-
-        // Laporan
-        $existingLaporan = Laporan::where('kode_transaksi', $kodeTransaksi)->first();
-        if (!$existingLaporan) {
-            $kodeLaporan = 'LAP-' . date('ymdHis') . '-' . rand(100, 999);
-            Laporan::create([
-                'kode_laporan' => $kodeLaporan,
-                'tgl_laporan' => $tanggalSekarang->toDateString(),
-                'pendapatan' => $totalPendapatan,
-                'kode_transaksi' => $kodeTransaksi
-            ]);
-        }
-
-        DB::commit();
-
-        return redirect()->route('payment.form', ['order_total' => $totalPendapatan]);
-
-    } catch (ValidationException $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false,
-            'message' => 'Data pesanan tidak valid: ' . implode(', ', Arr::flatten($e->errors()))
-        ], 422);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal memproses pesanan: ' . $e->getMessage()
-        ], 500);
-    }
-}
-
-    public function orderHistory()
-    {
-        $pesanan = NotaPesanan::with('menu')->orderBy('tanggal_pesanan', 'desc')->paginate(20);
-        return view('modules.order-history', compact('pesanan'));
-    }
-
-    public function orderDetail($kodePesanan)
-    {
-        $pesanan = NotaPesanan::where('kode_pesanan', $kodePesanan)->firstOrFail();
-        return view('modules.order-detail', compact('pesanan'));
-    }
-
-    public function updateOrderStatus(Request $request, $kodePesanan)
+    public function processOrder(Request $request): RedirectResponse | JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             $request->validate([
-                'status' => 'required|in:pending,processing,completed,cancelled'
+                'nama_pelanggan' => 'required|string|max:255',
+                'items' => 'required|array|min:1',
+                'items.*.kode_menu' => 'required|string',
+                'items.*.nama_menu' => 'required|string',
+                'items.*.quantity' => 'required|integer|min:1',
+                'total' => 'required|numeric|min:0'
             ]);
 
-            $pesanan = NotaPesanan::where('kode_pesanan', $kodePesanan)->firstOrFail();
-            $pesanan->update(['status' => $request->status]);
+            $kodePesanan = NotaPesanan::generateKodePesanan();
+            $kodeTransaksi = Transaksi::generateKodeTransaksi();
+            $tanggalSekarang = Carbon::now('Asia/Jakarta');
+            
+            $idPelayan = Auth::guard('pelayan')->id();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Status pesanan berhasil diupdate!',
-                'data' => $pesanan
+            // Simpan nota header
+            $nota = NotaPesanan::create([
+                'kode_pesanan' => $kodePesanan,
+                'nama_pelanggan' => $request->nama_pelanggan,
+                'tanggal_pesanan' => $tanggalSekarang,
+                'status' => 'pending',
+                'id_pelayan' => $idPelayan,
             ]);
-        } catch (\Exception $e) {
+
+
+
+            $totalPendapatan = 0;
+
+            foreach ($request->items as $item) {
+                $menu = BahanBaku::where('kode_bahan', $item['kode_menu'])->first();
+                $tipeMenu = 'bahan_baku';
+
+                if (!$menu) {
+                    $menu = Menu::where('kode_menu', $item['kode_menu'])->first();
+                    $tipeMenu = 'menu';
+                }
+
+                if (!$menu) {
+                    throw new \Exception("Item dengan kode {$item['kode_menu']} tidak ditemukan");
+                }
+
+                $hargaSatuan = $menu->harga;
+                $totalHarga = $hargaSatuan * $item['quantity'];
+                $totalPendapatan += $totalHarga;
+
+                // Simpan detail pesanan
+                DetailPesanan::create([
+                    'kode_pesanan' => $kodePesanan,
+                    'kode_menu' => $tipeMenu === 'menu' ? $item['kode_menu'] : null,
+                    'kode_bahan' => $tipeMenu === 'bahan_baku' ? $item['kode_menu'] : null,
+                    'jumlah_pesanan' => $item['quantity'],
+                    'harga_satuan' => $hargaSatuan,
+                    'total_harga' => $totalHarga,
+                ]);
+
+                // Kurangi stok
+                if ($tipeMenu === 'menu') {
+                    if ($menu->stok < $item['quantity']) {
+                        throw new \Exception("Stok menu minuman '{$menu->nama_menu}' tidak mencukupi");
+                    }
+                } else {
+                    if ($menu->stok < $item['quantity']) {
+                        throw new \Exception("Stok bahan baku '{$menu->nama_bahan}' tidak mencukupi");
+                    }
+                }
+                $menu->stok -= $item['quantity'];
+                $menu->save();
+            }
+
+            DB::commit();
+
+            return redirect()->route('payment.form', [
+                'order_total' => $totalPendapatan,
+                'kode_pesanan' => $kodePesanan,
+                'nama_pelanggan' => $request->nama_pelanggan
+            ]);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengupdate status: ' . $e->getMessage()
-            ]);
+                'message' => 'Data pesanan tidak valid: ' . implode(', ', Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses pesanan: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    public function dailyOrderReport()
-    {
-        $today = today();
-        $pesananHariIni = NotaPesanan::whereDate('tanggal_pesanan', $today)->get();
+        public function orderHistory()
+        {
+            $pesanan = NotaPesanan::with('menu')->orderBy('tanggal_pesanan', 'desc')->paginate(20);
+            return view('modules.order-history', compact('pesanan'));
+        }
 
-        $laporan = [
-            'tanggal' => $today->format('d/m/Y'),
-            'total_pesanan' => $pesananHariIni->count(),
-            'total_pendapatan' => $pesananHariIni->sum('total_harga'),
-            'pelanggan_unik' => $pesananHariIni->unique('nama_pelanggan')->count(),
-            'pesanan' => $pesananHariIni->groupBy('nama_pelanggan')
-        ];
+        public function orderDetail($kodePesanan)
+        {
+            $pesanan = NotaPesanan::where('kode_pesanan', $kodePesanan)->firstOrFail();
+            return view('modules.order-detail', compact('pesanan'));
+        }
 
-        return view('modules.daily-order-report', compact('laporan'));
-    }
+        public function updateOrderStatus(Request $request, $kodePesanan)
+        {
+            try {
+                $request->validate([
+                    'status' => 'required|in:pending,processing,completed,cancelled'
+                ]);
+
+                $pesanan = NotaPesanan::where('kode_pesanan', $kodePesanan)->firstOrFail();
+                $pesanan->update(['status' => $request->status]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status pesanan berhasil diupdate!',
+                    'data' => $pesanan
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengupdate status: ' . $e->getMessage()
+                ]);
+            }
+        }
+
+        public function dailyOrderReport()
+        {
+            $today = today();
+            $pesananHariIni = NotaPesanan::whereDate('tanggal_pesanan', $today)->get();
+
+            $laporan = [
+                'tanggal' => $today->format('d/m/Y'),
+                'total_pesanan' => $pesananHariIni->count(),
+                'total_pendapatan' => $pesananHariIni->sum('total_harga'),
+                'pelanggan_unik' => $pesananHariIni->unique('nama_pelanggan')->count(),
+                'pesanan' => $pesananHariIni->groupBy('nama_pelanggan')
+            ];
+
+            return view('modules.daily-order-report', compact('laporan'));
+        }
 }
+
