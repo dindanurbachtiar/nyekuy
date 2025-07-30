@@ -317,46 +317,26 @@
             cursor: not-allowed;
         }
 
-        .show-seblak {
-            background: #8B1538;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .show-seblak:hover {
-            background: #A91B47;
-        }
-
-        .show-seblak:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
+        .show-seblak,
         .show-minuman {
-
             background: #8B1538;
             color: white;
             border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 18px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 20px;
+            margin-right: 10px;
             transition: all 0.3s ease;
         }
 
+        .show-seblak:hover,
         .show-minuman:hover {
             background: #A91B47;
         }
 
+        .show-seblak:disabled,
         .show-minuman:disabled {
             background: #ccc;
             cursor: not-allowed;
@@ -542,28 +522,82 @@
             display: block;
         }
 
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
+        .cart-icon-btn {
+            background: #8B1538;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
 
-            .container {
-                padding: 15px;
-            }
+        .cart-icon-btn:hover {
+            background: #A91B47;
+        }
 
-            .modal-content {
-                width: 95%;
-                margin: 20px;
-            }
-            
+        .cart-count {
+            background: white;
+            color: #8B1538;
+            border-radius: 50%;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Cart Modal Specifics */
+        #cartModal .modal-content {
+            max-width: 600px;
+            /* Lebar lebih besar untuk keranjang */
+        }
+
+        #cartModal .invoice-table {
+            margin-top: 15px;
+            border: 1px solid #eee;
+            /* Add border for better visibility */
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #cartModal .invoice-table th,
+        #cartModal .invoice-table td {
+            padding: 10px 15px;
+        }
+
+        #cartModal .invoice-table th:first-child {
+            border-top-left-radius: 8px;
+        }
+
+        #cartModal .invoice-table th:last-child {
+            border-top-right-radius: 8px;
+        }
+
+        /* Styling for order separators in cart modal */
+        .order-separator {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+            padding: 8px 15px;
+            border-top: 2px solid #8B1538;
+            margin-top: 15px;
+            /* Add some space above the separator */
+            color: #333;
+        }
+
+        .order-separator:first-of-type {
+            margin-top: 0;
+            /* No margin for the first separator */
+            border-top: none;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <div style="display: flex; align-items: center; gap: 20px;">
                 <button class="back-btn" onclick="goBack()">
@@ -572,30 +606,32 @@
                 <h1 class="page-title">Pilih Menu</h1>
             </div>
 
-            <div class="date-widget">
-                <i class="fas fa-calendar-alt"></i>
-                <span id="currentDate"></span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="cart-icon-btn" onclick="openCartModal()">
+                    <i class="fas fa-shopping-cart"></i>
+                    Keranjang (<span id="cartItemCount">0</span>)
+                </button>
+                <div class="date-widget">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span id="currentDate"></span>
+                </div>
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content">
-        
-            <!-- Menu Section -->
+
             <div class="menu-section">
 
                 <div class="search-container">
                     <input type="text" class="search-input" placeholder="Cari Nama Menu/Kode Menu" id="searchInput">
                     <i class="fas fa-search search-icon"></i>
                 </div>
-                <!-- Tombol Pilih Kategori -->
                 <div style="margin-bottom: 20px;">
                     <button class="show-seblak" onclick="showSeblak()">Seblak</button>
                     <button class="show-minuman" onclick="showMinuman()">Minuman</button>
                 </div>
 
-                <!-- TABEL SEBLAK - dari bahan_baku -->
-               <table class="menu-table" id="seblakTable" style="display: none;">
+                <table class="menu-table" id="seblakTable" style="display: table;"> {{-- Default to Seblak --}}
                     <thead>
                         <tr>
                             <th>NAMA BAHAN</th>
@@ -605,7 +641,8 @@
                     </thead>
                     <tbody>
                         @foreach($bahanBakus as $bahan)
-                            <tr onclick="selectMenu('{{ $bahan->nama_bahan_baku }}', '{{ $bahan->kode_bahan }}', {{ $bahan->harga }})">
+                            <tr
+                                onclick="selectMenu('{{ $bahan->nama_bahan_baku }}', '{{ $bahan->kode_bahan }}', {{ $bahan->harga }}, 'bahan_baku')">
                                 <td>{{ $bahan->nama_bahan_baku }}</td>
                                 <td>{{ $bahan->stok }}</td>
                                 <td>Rp. {{ number_format($bahan->harga, 0, ',', '.') }}</td>
@@ -615,7 +652,6 @@
                 </table>
 
 
-                <!-- TABEL MINUMAN - dari menu_minuman -->
                 <table class="menu-table" id="minumanTable" style="display: none;">
                     <thead>
                         <tr>
@@ -626,11 +662,12 @@
                     </thead>
                     <tbody>
                         @foreach($menus as $menu)
-                            <tr onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }})">
+                            <tr
+                                onclick="selectMenu('{{ $menu->nama_menu }}', '{{ $menu->kode_menu }}', {{ $menu->harga }}, 'menu')">
                                 <td>{{ $menu->nama_menu }}</td>
                                 <td>{{ $menu->stok }}</td>
                                 <td>Rp. {{ number_format($menu->harga, 0, ',', '.') }}</td>
-                               
+
                             </tr>
                         @endforeach
                     </tbody>
@@ -638,7 +675,6 @@
 
             </div>
 
-            <!-- Order Section -->
             <div class="order-section">
                 <input type="text" class="customer-input" placeholder="Nama Pelanggan" id="customerName" required>
 
@@ -651,11 +687,10 @@
                                 <th>NAMA MENU</th>
                                 <th>QTY</th>
                                 <th>HARGA</th>
-                                <th></th>
+                                <th></th> {{-- Kolom untuk tombol hapus --}}
                             </tr>
                         </thead>
-                        <tbody id="orderItems">
-                            <!-- Order items will be populated by JavaScript -->
+                        <tbody id="invoiceItemsTableBody">
                         </tbody>
                     </table>
 
@@ -663,7 +698,7 @@
                         <input type="number" class="qty-input" value="1" min="1" id="quantity">
                         <button class="qty-btn" onclick="changeQuantity(-1)">-</button>
                         <button class="qty-btn" onclick="changeQuantity(1)">+</button>
-                        <button class="add-item-btn" onclick="addSelectedItem()">Tambah</button>
+                        <button class="add-item-btn" onclick="addItemToInvoice()">Tambah</button>
                     </div>
 
                     <div class="total-section">
@@ -673,21 +708,61 @@
                         </div>
                     </div>
 
-                    <div class="loading" id="orderLoading">
-                        <i class="fas fa-spinner fa-spin"></i> Memproses pesanan...
-                    </div>
-
-                    <button type="button" class="order-btn" id="orderButton" onclick="processOrder()">Pesan</button>
+                    {{-- Tombol "Pesan" sekarang akan memindahkan item dari faktur ke keranjang --}}
+                    <button type="button" class="order-btn" id="orderButton"
+                        onclick="addInvoiceBatchToCart()">Pesan</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="cartModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-back-btn" onclick="closeCartModal()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h3 class="modal-title">Konfirmasi Pesanan</h3>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px;">Nama Pelanggan: <strong id="customerNameInModal"></strong></p>
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>MENU</th>
+                            <th>QTY</th>
+                            <th>HARGA</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartModalItemsTableBody">
+                    </tbody>
+                </table>
+
+                <div class="total-section">
+                    <div class="total-amount">
+                        <span>Total Keseluruhan</span>
+                        <span id="cartModalTotalAmount">Rp. 0</span>
+                    </div>
+                </div>
+
+                <div class="loading" id="checkoutLoading">
+                    <i class="fas fa-spinner fa-spin"></i> Memproses pesanan...
+                </div>
+
+                <button type="button" class="modal-submit-btn" id="checkoutButton"
+                    onclick="processOrderFromCart()">Lanjutkan ke Pembayaran</button>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let selectedMenu = null;
-        let orderItems = [];
-        let total = 0;
+        let invoiceItems = []; // Ini adalah item yang ada di "Faktur" sementara
+        let cartBatches = []; // Ini adalah array of arrays, setiap sub-array adalah "batch" pesanan dari faktur
+        let currentCustomerName = ''; // Menyimpan nama pelanggan yang sedang bertransaksi
 
         // Update date in real-time
         function updateDateTime() {
@@ -704,6 +779,13 @@
         setInterval(updateDateTime, 1000);
         updateDateTime(); // Initial call
 
+        document.addEventListener('DOMContentLoaded', () => {
+            showSeblak(); // Default to Seblak table on load
+            updateInvoiceTable(); // Initial render of the main "Faktur" table
+            updateTotalInvoice(); // Initial total calculation for invoice
+            updateCartItemCount(); // Initial cart count
+        });
+
         function showSeblak() {
             document.getElementById('seblakTable').style.display = 'table';
             document.getElementById('minumanTable').style.display = 'none';
@@ -718,20 +800,23 @@
             window.history.back();
         }
 
-        function selectMenu(name, code, price) {
+        function selectMenu(name, code, price, type) {
             selectedMenu = {
                 name,
                 code,
-                price
+                price,
+                type
             };
 
-            // Remove previous selection
+            // Remove previous selection highlight
             document.querySelectorAll('.menu-table tbody tr').forEach(row => {
                 row.classList.remove('selected');
             });
 
             // Highlight selected row
             event.currentTarget.classList.add('selected');
+            // Reset quantity input to 1 when a new menu is selected
+            document.getElementById('quantity').value = 1;
         }
 
         function changeQuantity(change) {
@@ -742,39 +827,49 @@
             qtyInput.value = currentQty;
         }
 
-        function addSelectedItem() {
+        function addItemToInvoice() {
             if (!selectedMenu) {
-                alert('Pilih menu terlebih dahulu!');
+                Swal.fire('Info', 'Pilih menu terlebih dahulu!', 'info');
                 return;
             }
 
             const quantity = parseInt(document.getElementById('quantity').value);
             const itemTotal = selectedMenu.price * quantity;
 
-            // Check if item already exists in order
-            const existingItemIndex = orderItems.findIndex(item => item.code === selectedMenu.code);
+            // Check if item already exists in invoiceItems
+            const existingItemIndex = invoiceItems.findIndex(item => item.code === selectedMenu.code);
 
             if (existingItemIndex !== -1) {
                 // Update existing item
-                orderItems[existingItemIndex].quantity += quantity;
-                orderItems[existingItemIndex].total = orderItems[existingItemIndex].price * orderItems[existingItemIndex]
+                invoiceItems[existingItemIndex].quantity += quantity;
+                invoiceItems[existingItemIndex].total = invoiceItems[existingItemIndex].price * invoiceItems[
+                    existingItemIndex]
                     .quantity;
             } else {
                 // Add new item
-                orderItems.push({
+                invoiceItems.push({
                     name: selectedMenu.name,
                     code: selectedMenu.code,
                     price: selectedMenu.price,
                     quantity: quantity,
-                    total: itemTotal
+                    total: itemTotal,
+                    type: selectedMenu.type
                 });
             }
 
-            // Update UI
-            updateOrderTable();
-            updateTotal();
+            Swal.fire({
+                icon: 'success',
+                title: 'Ditambahkan!',
+                text: `${selectedMenu.name} sejumlah ${quantity} berhasil ditambahkan ke faktur.`,
+                showConfirmButton: false,
+                timer: 1500
+            });
 
-            // Reset quantity and selection
+            // Update UI for invoice
+            updateInvoiceTable();
+            updateTotalInvoice();
+
+            // Reset quantity and selection after adding to invoice
             document.getElementById('quantity').value = 1;
             selectedMenu = null;
             document.querySelectorAll('.menu-table tbody tr').forEach(row => {
@@ -782,60 +877,262 @@
             });
         }
 
-        function updateOrderTable() {
-            const tbody = document.getElementById('orderItems');
+        function updateInvoiceTable() {
+            const tbody = document.getElementById('invoiceItemsTableBody');
             tbody.innerHTML = '';
 
-            orderItems.forEach((item, index) => {
+            if (invoiceItems.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="4" style="text-align: center; padding: 20px; color: #777;">Belum ada item yang ditambahkan.</td></tr>`;
+                return;
+            }
+
+            invoiceItems.forEach((item, index) => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${item.name}</td>
                     <td>${item.quantity}</td>
                     <td>Rp. ${item.total.toLocaleString('id-ID')}</td>
-                    <td><button class="delete-btn" onclick="removeItem(${index})">🗑</button></td>
+                    <td><button class="delete-btn" onclick="removeInvoiceItem(${index})">🗑</button></td>
                 `;
             });
         }
 
-        function removeItem(index) {
-            orderItems.splice(index, 1);
-            updateOrderTable();
-            updateTotal();
+        function removeInvoiceItem(index) {
+            invoiceItems.splice(index, 1);
+            updateInvoiceTable();
+            updateTotalInvoice();
         }
 
-        function updateTotal() {
-            total = orderItems.reduce((sum, item) => sum + item.total, 0);
-            document.getElementById('totalAmount').textContent = `Rp. ${total.toLocaleString('id-ID')}`;
+        function updateTotalInvoice() {
+            let totalAmount = invoiceItems.reduce((sum, item) => sum + item.total, 0);
+            document.getElementById('totalAmount').textContent = `Rp. ${totalAmount.toLocaleString('id-ID')}`;
         }
 
-        function processOrder() {
-            const customerName = document.getElementById('customerName').value.trim();
+        function updateCartItemCount() {
+            // Count total items across all batches in cartBatches
+            let totalItemsInCart = 0;
+            cartBatches.forEach(batch => {
+                totalItemsInCart += batch.length;
+            });
+            document.getElementById('cartItemCount').textContent = totalItemsInCart;
+        }
+
+        // --- Logic to add invoice items batch to cart ---
+        function addInvoiceBatchToCart() {
+            const customerNameInput = document.getElementById('customerName');
+            const customerName = customerNameInput.value.trim();
 
             if (!customerName) {
-                alert('Silakan masukkan nama pelanggan!');
+                Swal.fire('Peringatan', 'Silakan masukkan nama pelanggan terlebih dahulu!', 'warning');
                 return;
             }
 
-            if (orderItems.length === 0) {
-                alert('Belum ada item yang dipilih!');
+            if (invoiceItems.length === 0) {
+                Swal.fire('Peringatan', 'Faktur kosong. Silakan tambahkan menu terlebih dahulu!', 'warning');
                 return;
             }
 
-            // Show loading
-            document.getElementById('orderLoading').classList.add('active');
-            document.getElementById('orderButton').disabled = true;
+            // If this is the first order for this customer, set currentCustomerName
+            if (cartBatches.length === 0) {
+                currentCustomerName = customerName;
+            } else if (currentCustomerName !== customerName) {
+                // If customer name changes, give option to clear cart or keep current customer
+                Swal.fire({
+                    title: 'Nama Pelanggan Berbeda',
+                    text: `Anda sedang memesan untuk "${currentCustomerName}". Apakah Anda ingin memulai pesanan baru untuk "${customerName}" (ini akan mengosongkan keranjang) atau terus dengan pelanggan yang sama?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Mulai Pesanan Baru',
+                    cancelButtonText: 'Lanjutkan untuk Pelanggan Lama',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // User chose to start new order, clear cart and set new customer
+                        cartBatches = [];
+                        currentCustomerName = customerName;
+                        addCurrentInvoiceItemsAsBatch();
+                        Swal.fire('Pesanan Baru Dimulai',
+                            `Keranjang dikosongkan. Pesanan baru untuk ${customerName} ditambahkan.`, 'info');
+                    } else {
+                        // User chose to continue with old customer, use existing customer name
+                        customerNameInput.value = currentCustomerName; // Reset input to current customer
+                        addCurrentInvoiceItemsAsBatch(); // Add items using the existing customer name
+                        Swal.fire('Lanjutkan Pesanan', `Batch pesanan ditambahkan untuk ${currentCustomerName}.`,
+                            'info');
+                    }
+                    updateInvoiceTable(); // Clear invoice table
+                    updateTotalInvoice(); // Reset invoice total
+                    updateCartItemCount(); // Update cart count
+                });
+                return; // Exit here to wait for user's decision
+            }
+
+            // If customer name is same or it's the first order, proceed to add to global cart
+            addCurrentInvoiceItemsAsBatch();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Batch Pesanan Ditambahkan!',
+                text: 'Silakan klik tombol "Keranjang" di header untuk melanjutkan pembayaran.',
+                showConfirmButton: false,
+                timer: 2000
+            });
+
+            // Update UI
+            updateInvoiceTable(); // Clear invoice table
+            updateTotalInvoice(); // Reset invoice total
+            updateCartItemCount(); // Update cart count
+        }
+
+        // Helper function to add current invoice items as a new batch to cartBatches
+        function addCurrentInvoiceItemsAsBatch() {
+            if (invoiceItems.length > 0) {
+                cartBatches.push(JSON.parse(JSON.stringify(invoiceItems))); // Add current invoice as a new batch
+                invoiceItems = []; // Clear the invoice after moving
+            }
+        }
+
+
+        // --- Cart Modal Functions ---
+        function openCartModal() {
+            document.getElementById('customerNameInModal').textContent = currentCustomerName || 'Belum Ada Pelanggan';
+
+            if (cartBatches.length === 0) { // Check cartBatches length
+                Swal.fire('Peringatan', 'Keranjang belanja kosong. Silakan tambahkan pesanan terlebih dahulu!', 'warning');
+                document.getElementById('cartModal').classList.remove('active');
+                document.body.style.overflow = 'auto';
+                return;
+            }
+
+            updateCartModalTable();
+            updateCartModalTotal();
+            document.getElementById('cartModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function updateCartModalTable() {
+            const tbody = document.getElementById('cartModalItemsTableBody');
+            tbody.innerHTML = '';
+
+            if (cartBatches.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="4" style="text-align: center; padding: 20px; color: #777;">Keranjang kosong.</td></tr>`;
+                return;
+            }
+
+            let overallItemIndex = 0; // To uniquely identify items for removal if needed
+            cartBatches.forEach((batch, batchIndex) => {
+                // Add a separator row for each batch
+                const separatorRow = tbody.insertRow();
+                separatorRow.className = 'order-separator-row'; // Add a class for potential styling
+                separatorRow.innerHTML = `
+                    <td colspan="4" class="order-separator">
+                        Batch Pesanan ${batchIndex + 1}
+                        <button class="delete-btn" style="float: right;" onclick="removeCartBatch(${batchIndex})" title="Hapus batch ini">🗑</button>
+                    </td>
+                `;
+
+                batch.forEach(item => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>Rp. ${item.total.toLocaleString('id-ID')}</td>
+                        <td></td> `;
+                    overallItemIndex++;
+                });
+            });
+        }
+
+        function removeCartBatch(batchIndex) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: `Batch pesanan ke-${batchIndex + 1} ini akan dihapus dari keranjang!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    cartBatches.splice(batchIndex, 1);
+                    updateCartModalTable();
+                    updateCartModalTotal();
+                    updateCartItemCount();
+                    if (cartBatches.length === 0) {
+                        closeCartModal();
+                        document.getElementById('customerName').value = ''; // Clear customer name if cart is empty
+                        currentCustomerName = '';
+                    }
+                    Swal.fire(
+                        'Dihapus!',
+                        'Batch pesanan telah dihapus dari keranjang.',
+                        'success'
+                    );
+                }
+            });
+        }
+
+
+        function updateCartModalTotal() {
+            let totalModalAmount = 0;
+            cartBatches.forEach(batch => {
+                totalModalAmount += batch.reduce((sum, item) => sum + item.total, 0);
+            });
+            document.getElementById('cartModalTotalAmount').textContent = `Rp. ${totalModalAmount.toLocaleString('id-ID')}`;
+        }
+
+        function processOrderFromCart() {
+            if (cartBatches.length === 0) {
+                Swal.fire('Peringatan', 'Keranjang belanja kosong. Tidak ada pesanan untuk diproses.', 'warning');
+                return;
+            }
+
+            if (!currentCustomerName) {
+                Swal.fire('Peringatan', 'Nama pelanggan belum diatur. Mohon isi nama pelanggan pada faktur utama.',
+                    'warning');
+                return;
+            }
+
+            document.getElementById('checkoutLoading').classList.add('active');
+            document.getElementById('checkoutButton').disabled = true;
+
+            // Flatten all items from all batches into a single array for the backend
+            let allItemsFlattened = [];
+            cartBatches.forEach(batch => {
+                batch.forEach(item => {
+                    // Check if item already exists in the flattened list (e.g., if "Seblak A" was in multiple batches)
+                    const existingItemInFlattened = allItemsFlattened.findIndex(flatItem => flatItem
+                        .code === item.code);
+                    if (existingItemInFlattened !== -1) {
+                        allItemsFlattened[existingItemInFlattened].quantity += item.quantity;
+                        // Recalculate total for this item in flattened list
+                        allItemsFlattened[existingItemInFlattened].total = allItemsFlattened[
+                            existingItemInFlattened].quantity * item.price;
+                    } else {
+                        allItemsFlattened.push(JSON.parse(JSON.stringify(item))); // Deep copy
+                    }
+                });
+            });
 
             const orderData = {
-                nama_pelanggan: customerName,
-                items: orderItems.map(item => ({
+                nama_pelanggan: currentCustomerName,
+                items: allItemsFlattened.map(item => ({
                     kode_menu: item.code,
                     nama_menu: item.name,
-                    quantity: item.quantity
+                    quantity: item.quantity,
+                    type: item.type
                 })),
-                total: total
+                total: allItemsFlattened.reduce((sum, item) => sum + item.total, 0)
             };
 
-            // Send order to server
             fetch('/modules/orders/process', {
                 method: 'POST',
                 headers: {
@@ -844,201 +1141,46 @@
                 },
                 body: JSON.stringify(orderData)
             })
-            .then(response => {
-                // If it's a redirect, handle it and stop the chain
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    // Return a promise that never resolves to effectively stop the chain for this fetch
-                    return new Promise(() => {}); // This prevents subsequent .then/.catch from firing
-                }
+                .then(response => {
+                    document.getElementById('checkoutLoading').classList.remove('active');
+                    document.getElementById('checkoutButton').disabled = false;
 
-                // If it's not a redirect, but an error, parse JSON and throw
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || 'Terjadi kesalahan server.');
-                    });
-                }
-
-                // This path should ideally not be reached if the backend always redirects on success.
-                // If it is reached, it means the backend returned a 2xx status but not a redirect.
-                // We'll still try to parse it as JSON, but it might be an empty response.
-                return response.json();
-            })
-            .then(data => {
-                // This block should only be reached if the server returned a successful JSON response (not a redirect).
-                // Based on the current backend, this path is not expected for successful order processing.
-                // If it does, it means the backend didn't redirect as expected.
-                document.getElementById('orderLoading').classList.remove('active');
-                document.getElementById('orderButton').disabled = false;
-                alert('Pesanan berhasil diproses, namun tidak ada pengalihan. Data: ' + JSON.stringify(data));
-            })
-            .catch(error => {
-                // This catch block will handle:
-                // 1. Network errors
-                // 2. Errors thrown from response.json().then(err => { throw new Error(...) })
-                // 3. Any other unexpected errors in the promise chain
-                document.getElementById('orderLoading').classList.remove('active');
-                document.getElementById('orderButton').disabled = false;
-                
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat memproses pesanan: ' + error.message);
-            });
-        }
-
-        // Modal Functions
-        function openAddMenuModal() {
-            document.getElementById('addMenuModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeAddMenuModal() {
-            document.getElementById('addMenuModal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-            document.getElementById('addMenuForm').reset();
-            document.getElementById('alertContainer').innerHTML = '';
-        }
-
-        function openEditMenuModal() {
-            document.getElementById('editMenuModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeEditMenuModal() {
-            document.getElementById('editMenuModal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-            document.getElementById('editMenuForm').reset();
-            document.getElementById('editAlertContainer').innerHTML = '';
-        }
-
-        function editMenu(kodeMenu, namaMenu, harga) {
-            document.getElementById('editMenuCode').value = kodeMenu;
-            document.getElementById('editMenuName').value = namaMenu;
-            document.getElementById('editMenuPrice').value = harga;
-            openEditMenuModal();
-        }
-
-        function showAlert(message, type = 'success', containerId = 'alertContainer') {
-            const alertContainer = document.getElementById(containerId);
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-
-            alertContainer.innerHTML = `
-                <div class="alert ${alertClass}">
-                    ${message}
-                </div>
-            `;
-
-            // Auto hide after 3 seconds
-            setTimeout(() => {
-                alertContainer.innerHTML = '';
-            }, 3000);
-        }
-
-        function submitNewMenu(event) {
-            event.preventDefault();
-
-            const formData = {
-                kode_menu: document.getElementById('menuCode').value,
-                nama_menu: document.getElementById('menuName').value,
-                harga: parseInt(document.getElementById('menuPrice').value)
-            };
-
-            // Send AJAX request to store menu
-            fetch('/modules/orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(formData)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Add new menu to table
-                        const tbody = document.querySelector('#menuTable tbody');
-                        const newRow = tbody.insertRow();
-                        newRow.onclick = () => selectMenu(data.data.nama_menu, data.data.kode_menu, data.data.harga);
-                        newRow.innerHTML = `
-                        <td>${data.data.nama_menu}</td>
-                        <td>${data.data.kode_menu}</td>
-                        <td>Rp. ${data.data.harga.toLocaleString('id-ID')}</td>
-                        <td>
-                            <button class="edit-btn" onclick="event.stopPropagation(); editMenu('${data.data.kode_menu}', '${data.data.nama_menu}', ${data.data.harga})">
-                                Edit
-                            </button>
-                        </td>
-                    `;
-
-                        showAlert(data.message, 'success');
-
-                        // Close modal after 2 seconds
-                        setTimeout(() => {
-                            closeAddMenuModal();
-                        }, 2000);
-                    } else {
-                        showAlert(data.message || 'Gagal menambahkan menu!', 'error');
+                    if (response.redirected) {
+                        // If backend redirects, it means the order was processed and payment form is next
+                        cartBatches = []; // Clear the entire cart
+                        currentCustomerName = ''; // Clear customer name
+                        document.getElementById('customerName').value = ''; // Clear customer name input
+                        updateCartItemCount();
+                        closeCartModal(); // Close modal before redirect
+                        window.location.href = response.url; // Redirect to payment form
+                        return new Promise(() => { }); // Prevent further .then() calls
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('Terjadi kesalahan saat menambahkan menu!', 'error');
-                });
-        }
-
-        function submitEditMenu(event) {
-            event.preventDefault();
-
-            const kodeMenu = document.getElementById('editMenuCode').value;
-            const formData = {
-                nama_menu: document.getElementById('editMenuName').value,
-                harga: parseInt(document.getElementById('editMenuPrice').value)
-            };
-
-            // Send AJAX request to update menu
-            fetch(`/modules/orders/${kodeMenu}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(formData)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update menu in table
-                        const rows = document.querySelectorAll('#menuTable tbody tr');
-                        rows.forEach(row => {
-                            const kodeCell = row.cells[1];
-                            if (kodeCell && kodeCell.textContent === kodeMenu) {
-                                row.cells[0].textContent = data.data.nama_menu;
-                                row.cells[2].textContent = `Rp. ${data.data.harga.toLocaleString('id-ID')}`;
-                                row.onclick = () => selectMenu(data.data.nama_menu, data.data.kode_menu, data
-                                    .data.harga);
-
-                                const editBtn = row.querySelector('.edit-btn');
-                                editBtn.onclick = (e) => {
-                                    e.stopPropagation();
-                                    editMenu(data.data.kode_menu, data.data.nama_menu, data.data.harga);
-                                };
-                            }
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || 'Terjadi kesalahan server.');
                         });
-
-                        showAlert(data.message, 'success', 'editAlertContainer');
-
-                        // Close modal after 2 seconds
-                        setTimeout(() => {
-                            closeEditMenuModal();
-                        }, 2000);
-                    } else {
-                        showAlert(data.message || 'Gagal mengupdate menu!', 'error', 'editAlertContainer');
                     }
+                    return response.json(); // This part might not be reached if redirected
+                })
+                .then(data => {
+                    // This block will only be reached if the backend *doesn't* redirect (unexpected for processOrder)
+                    Swal.fire('Sukses', 'Pesanan berhasil diproses, namun tidak ada pengalihan.', 'success');
+                    cartBatches = []; // Clear the cart
+                    currentCustomerName = ''; // Clear customer name
+                    document.getElementById('customerName').value = ''; // Clear customer name input
+                    updateCartModalTable();
+                    updateCartModalTotal();
+                    updateCartItemCount();
+                    closeCartModal();
                 })
                 .catch(error => {
+                    document.getElementById('checkoutLoading').classList.remove('active');
+                    document.getElementById('checkoutButton').disabled = false;
                     console.error('Error:', error);
-                    showAlert('Terjadi kesalahan saat mengupdate menu!', 'error', 'editAlertContainer');
+                    Swal.fire('Error', 'Terjadi kesalahan saat memproses pesanan: ' + error.message, 'error');
                 });
         }
+
 
         // Search functionality with AJAX
         let searchTimeout;
@@ -1047,108 +1189,68 @@
             const searchTerm = e.target.value;
 
             searchTimeout = setTimeout(() => {
-                if (searchTerm.length >= 2 || searchTerm.length === 0) {
-                    fetch(`/modules/orders/search?q=${encodeURIComponent(searchTerm)}`)
-                        .then(response => response.json())
-                        .then(menus => {
-                            const tbody = document.querySelector('#menuTable tbody');
-                            tbody.innerHTML = '';
+                const isSeblakTableActive = document.getElementById('seblakTable').style.display ===
+                    'table';
+                const searchUrl = isSeblakTableActive ?
+                    `/modules/orders/search-bahan?q=${encodeURIComponent(searchTerm)}` :
+                    `/modules/orders/search-menu?q=${encodeURIComponent(searchTerm)}`;
+                const activeTableId = isSeblakTableActive ? 'seblakTable' : 'minumanTable';
+                const itemType = isSeblakTableActive ? 'bahan_baku' : 'menu';
 
-                            if (menus.length > 0) {
-                                menus.forEach(menu => {
-                                    const row = tbody.insertRow();
-                                    row.onclick = () => selectMenu(menu.nama_menu, menu
-                                        .kode_menu, menu.harga);
-                                    row.innerHTML = `
-                                        <td>${menu.nama_menu}</td>
-                                        <td>${menu.kode_menu}</td>
-                                        <td>Rp. ${menu.harga.toLocaleString('id-ID')}</td>
-                                        <td>
-                                            <button class="edit-btn" onclick="event.stopPropagation(); editMenu('${menu.kode_menu}', '${menu.nama_menu}', ${menu.harga})">
-                                                Edit
-                                            </button>
-                                        </td>
-                                    `;
-                                });
-                            } else {
+
+                fetch(searchUrl)
+                    .then(response => response.json())
+                    .then(results => {
+                        const tbody = document.querySelector(`#${activeTableId} tbody`);
+                        tbody.innerHTML = '';
+
+                        if (results.length > 0) {
+                            results.forEach(item => {
                                 const row = tbody.insertRow();
+                                const kodeField = itemType === 'bahan_baku' ? item.kode_bahan :
+                                    item.kode_menu;
+                                const namaField = itemType === 'bahan_baku' ? item
+                                    .nama_bahan_baku : item.nama_menu;
+
+                                row.onclick = () => selectMenu(namaField, kodeField, item.harga,
+                                    itemType);
                                 row.innerHTML = `
-                                    <td colspan="4" style="text-align: center; padding: 20px;">
-                                        Tidak ada menu yang ditemukan.
-                                    </td>
+                                    <td>${namaField}</td>
+                                    <td>${item.stok}</td>
+                                    <td>Rp. ${item.harga.toLocaleString('id-ID')}</td>
                                 `;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Search error:', error);
-                        });
-                }
+                            });
+                        } else {
+                            const row = tbody.insertRow();
+                            row.innerHTML = `
+                                <td colspan="3" style="text-align: center; padding: 20px;">
+                                    Tidak ada ${isSeblakTableActive ? 'bahan baku' : 'menu'} yang ditemukan.
+                                </td>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                    });
             }, 300);
         });
 
         // Close modal when clicking outside
-        document.getElementById('addMenuModal').addEventListener('click', function (e) {
+        document.getElementById('cartModal').addEventListener('click', function (e) {
             if (e.target === this) {
-                closeAddMenuModal();
-            }
-        });
-
-        document.getElementById('editMenuModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeEditMenuModal();
+                closeCartModal();
             }
         });
 
         // Close modal with Escape key
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
-                closeAddMenuModal();
-                closeEditMenuModal();
+                closeCartModal();
             }
         });
 
-        // Initialize
-        updateTotal();
-
-        // Konfirmasi Delete Menu (SweetAlert2)
-        function confirmDelete(kodeMenu) {
-            Swal.fire({
-                title: 'Yakin hapus menu ini?',
-                text: "Data yang dihapus tidak bisa dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, hapus!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/modules/orders/${kodeMenu}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Terhapus!', data.message, 'success');
-                            
-                            // ✅ Hapus baris tabel tanpa reload
-                            const row = document.querySelector(`tr[data-kode='${kodeMenu}']`);
-                            if (row) row.remove();
-                        } else {
-                            Swal.fire('Gagal!', 'Menu gagal dihapus.', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error!', 'Terjadi kesalahan saat menghapus.', 'error');
-                    });
-                }
-            });
-        }
-
-
+        // Initialize cart count
+        updateCartItemCount();
     </script>
 </body>
 

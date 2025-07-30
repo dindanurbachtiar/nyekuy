@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bahan Baku - Dashboard</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* CSS ANDA YANG ASLI - DENGAN PENYESUAIAN GRID SANGAT MINIMAL */
         * {
             margin: 0;
             padding: 0;
@@ -132,19 +134,13 @@
             justify-content: center;
         }
 
-        .main-content {
-            background: white;
-            border-radius: 16px;
-            padding: 0;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
+        /* STRUKTUR GRID PALING UMUM UNTUK KEDUA TABEL (5 KOLOM) */
         .table-header {
             background: #e9ecef;
             padding: 15px 20px;
             display: grid;
-            grid-template-columns: 200px 1fr 150px 180px;
+            /* Default 5 kolom: Kode, Nama, Stok, Harga, Aksi */
+            grid-template-columns: 150px 1fr 100px 150px 180px;
             gap: 20px;
             font-weight: 600;
             color: #495057;
@@ -154,12 +150,14 @@
         .table-row {
             padding: 15px 20px;
             display: grid;
-            grid-template-columns: 200px 1fr 150px 180px;
+            /* Default 5 kolom */
+            grid-template-columns: 150px 1fr 100px 150px 180px;
             gap: 20px;
             align-items: center;
             border-bottom: 1px solid #f0f0f0;
             transition: background-color 0.3s ease;
         }
+
 
         .table-row:hover {
             background-color: #f8f9fa;
@@ -189,7 +187,19 @@
             color: #666;
         }
 
-        .show-seblak {
+        .material-price {
+            font-weight: 500;
+            color: #666;
+        }
+
+        /* Kolom yang disembunyikan secara default akan diatur JS */
+        .hidden-col {
+            display: none;
+        }
+
+
+        .show-seblak,
+        .show-minuman {
             background: #8B1538;
             color: white;
             border: none;
@@ -198,42 +208,25 @@
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 20px;
+            margin-right: 10px;
             transition: all 0.3s ease;
         }
 
-        .show-seblak:hover {
+        .show-seblak.active,
+        .show-minuman.active {
             background: #A91B47;
         }
 
-        .show-seblak:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .show-minuman {
-
-            background: #8B1538;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
+        .show-seblak:hover,
         .show-minuman:hover {
             background: #A91B47;
         }
 
+        .show-seblak:disabled,
         .show-minuman:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
-
 
         .edit-btn {
             background: #8B1538;
@@ -258,7 +251,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
 
         .delete-btn:hover {
             background: #b02a37;
@@ -269,7 +262,7 @@
             background: #A91B47;
         }
 
-        /* Modal Styles */
+        /* Modal Styles (tidak berubah) */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -354,7 +347,7 @@
             color: #333;
             margin-bottom: 10px;
         }
-        
+
 
         .form-input {
             width: 100%;
@@ -399,15 +392,13 @@
                 width: 250px;
             }
 
+            /* Media Queries untuk table-header dan table-row umum (5 kolom) */
             .table-header,
             .table-row {
-                grid-template-columns: 150px 1fr 120px 80px;
+                grid-template-columns: 100px 1fr 80px 100px 70px;
+                /* Default untuk 5 kolom */
                 gap: 15px;
-            }
-
-            .modal-content {
-                width: 95%;
-                margin: 20px;
+                font-size: 14px;
             }
         }
 
@@ -421,9 +412,11 @@
                 width: 200px;
             }
 
+            /* Media Queries untuk table-header dan table-row umum (5 kolom) */
             .table-header,
             .table-row {
-                grid-template-columns: 120px 1fr 100px 70px;
+                grid-template-columns: 70px 1fr 50px 70px 50px;
+                /* Default untuk 5 kolom */
                 gap: 10px;
                 font-size: 12px;
             }
@@ -448,7 +441,7 @@
             </div>
 
             <div class="right-header">
-                <button class="add-btn" onclick="openAddMaterialModal()">
+                <button class="add-btn" onclick="openAddModal()">
                     <i class="fas fa-plus"></i>
                 </button>
                 <div class="search-container">
@@ -459,208 +452,364 @@
         </div>
 
 
-        <!-- Menu Section -->
         <div class="menu-section">
             <div style="margin-bottom: 20px;">
-                <button class="show-seblak" onclick="showSeblak()">Bahan Baku Seblak</button>
-                <button class="show-minuman" onclick="showMinuman()">Bahan Baku Minuman</button>
+                <button class="show-seblak active" id="btnShowSeblak" onclick="showTable('seblak')">Bahan Baku
+                    Seblak</button>
+                <button class="show-minuman" id="btnShowMinuman" onclick="showTable('minuman')">Bahan Baku
+                    Minuman</button>
             </div>
-            <!-- TABEL BAHAN BAKU SEBLAK -->
+
             <div id="tableSeblak" style="display: block;">
-                <div class="table-header">
+                <div class="table-header"> {{-- Menggunakan class table-header umum --}}
                     <div>KODE</div>
                     <div>NAMA BAHAN</div>
                     <div>STOK</div>
+                    <div id="headerSeblakHarga">HARGA</div> {{-- Tambah ID untuk sembunyikan/tampilkan --}}
                     <div>AKSI</div>
                 </div>
-
-                @foreach($bahanBakus as $bahan)
-                <div class="table-row">
-                    <div class="material-code">{{ $bahan->kode_bahan }}</div>
-                    <div class="material-name">{{ $bahan->nama_bahan_baku }}</div>
-                    <div class="material-qty">{{ $bahan->stok }}</div>
-                    <div class="actions">
-                        <button class="edit-btn" onclick="openEditMaterialModal(this)"data-kode="{{ $bahan->kode_bahan }}"data-nama="{{ $bahan->nama_bahan_baku }}"data-stok="{{ $bahan->stok }}">Edit</button>
-                        <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
-                        </form>
-                    </div>
+                <div id="seblakTableContent">
+                    @foreach($bahanBakus as $bahan)
+                        <div class="table-row"> {{-- Menggunakan class table-row umum --}}
+                            <div class="material-code">{{ $bahan->kode_bahan }}</div>
+                            <div class="material-name">{{ $bahan->nama_bahan_baku }}</div>
+                            <div class="material-qty">{{ $bahan->stok }}</div>
+                            <div class="material-price">{{ number_format($bahan->harga, 0, ',', '.') }}</div>
+                            {{-- Tampilkan Harga --}}
+                            <div class="actions">
+                                <button class="edit-btn" onclick="openEditModal(this)" data-type="bahan_baku"
+                                    data-kode="{{ $bahan->kode_bahan }}" data-nama="{{ $bahan->nama_bahan_baku }}"
+                                    data-stok="{{ $bahan->stok }}" data-harga="{{ $bahan->harga }}">Edit</button>
+                                <form action="{{ url('/bahan-baku/' . $bahan->kode_bahan) }}" method="POST"
+                                    style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="delete-btn"
+                                        onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
 
-            <!-- TABEL BAHAN BAKU SEBLAK -->
             <div id="tableMinuman" style="display: none;">
-                <div class="table-header">
+                <div class="table-header"> {{-- Menggunakan class table-header umum --}}
+                    <div>KODE</div>
                     <div>NAMA MINUMAN</div>
                     <div>STOK</div>
                     <div>HARGA</div>
                     <div>AKSI</div>
                 </div>
-
-                @foreach($menus as $menu)
-                <div class="table-row">
-                    <div class="material-code">{{ $menu->kode_menu }}</div>
-                    <div class="material-name">{{ $menu->nama_menu }}</div>
-                    <div class="material-qty">{{ $menu->stok }}</div>
-                    <div class="actions">
-                        <button class="edit-btn" onclick="openEditMaterialModal(this)"data-kode="{{ $menu->kode_menu }}"data-nama="{{ $menu->nama_menu }}"data-stok="{{ $menu->stok }}">Edit</button>
-                        <form action="/bahan-baku/{{ $bahan->kode_bahan }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="delete-btn" onclick="return confirm('Yakin ingin menghapus bahan ini?')">Delete</button>
-                        </form>
-                    </div>
+                <div id="minumanTableContent">
+                    @foreach($menus as $menu)
+                        <div class="table-row"> {{-- Menggunakan class table-row umum --}}
+                            <div class="material-code">{{ $menu->kode_menu }}</div>
+                            <div class="material-name">{{ $menu->nama_menu }}</div>
+                            <div class="material-qty">{{ $menu->stok }}</div>
+                            <div class="material-price">Rp. {{ number_format($menu->harga, 0, ',', '.') }}</div>
+                            <div class="actions">
+                                <button class="edit-btn" onclick="openEditModal(this)" data-type="menu"
+                                    data-kode="{{ $menu->kode_menu }}" data-nama="{{ $menu->nama_menu }}"
+                                    data-stok="{{ $menu->stok }}" data-harga="{{ $menu->harga }}">Edit</button>
+                                <form action="{{ url('/menu-minuman/' . $menu->kode_menu) }}" method="POST"
+                                    style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="delete-btn"
+                                        onclick="return confirm('Yakin ingin menghapus menu ini?')">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
         </div>
-        
-    {{-- Modal Tambah --}}
-    <div class="modal-overlay" id="addMaterialModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="modal-back-btn" onclick="closeAddMaterialModal()"><i class="fas fa-arrow-left"></i></button>
-                <h3 class="modal-title">Tambah Bahan Baku</h3>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ url('/bahan-baku') }}">
-                    @csrf
-                    <div class="form-group">
-                        <label class="form-label">Kode Bahan</label>
-                        <input type="text" class="form-input" name="kode_bahan" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nama Bahan</label>
-                        <input type="text" class="form-input" name="nama_bahan_baku" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">QTY</label>
-                        <input type="text" class="form-input" name="stok" required>
-                    </div>
-                    <button type="submit" class="modal-submit-btn">TAMBAH</button>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    {{-- Modal Edit --}}
-    <div class="modal-overlay" id="editMaterialModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="modal-back-btn" onclick="closeEditMaterialModal()"><i class="fas fa-arrow-left"></i></button>
-                <h3 class="modal-title">Edit Bahan Baku</h3>
-            </div>
-            <div class="modal-body">
-                <form id="editMaterialForm" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="form-group">
-                        <label class="form-label">Kode Bahan</label>
-                        <input type="text" class="form-input" id="editMaterialCode" name="kode_bahan" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nama Bahan</label>
-                        <input type="text" class="form-input" id="editMaterialName" name="nama_bahan_baku" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">QTY</label>
-                        <input type="text" class="form-input" id="editMaterialQty" name="stok" required>
-                    </div>
-                    <button type="submit" class="modal-submit-btn">SIMPAN</button>
-                </form>
-                <form id="deleteMaterialForm" method="POST" style="margin-top: 10px;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="modal-submit-btn" style="background-color: crimson;">HAPUS</button>
-                </form>
+        {{-- Modal Tambah --}}
+        <div class="modal-overlay" id="addModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="modal-back-btn" onclick="closeAddModal()"><i class="fas fa-arrow-left"></i></button>
+                    <h3 class="modal-title" id="addModalTitle">Tambah Bahan Baku</h3>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm" method="POST" action="">
+                        @csrf
+                        <div class="form-group">
+                            <label class="form-label" id="addCodeLabel">Kode Bahan</label>
+                            <input type="text" class="form-input" id="addCode" name="kode_bahan" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" id="addNameLabel">Nama Bahan</label>
+                            <input type="text" class="form-input" id="addName" name="nama_bahan_baku" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" id="addStokLabel">QTY</label>
+                            <input type="number" class="form-input" id="addStok" name="stok" min="0" required>
+                        </div>
+                        <div class="form-group" id="addHargaGroup">
+                            <label class="form-label">Harga</label>
+                            <input type="number" class="form-input" id="addHarga" name="harga" min="0">
+                        </div>
+                        <button type="submit" class="modal-submit-btn">TAMBAH</button>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
-    {{-- Script --}}
-    <script>
-        function showSeblak() {
-            document.getElementById('tableSeblak').style.display = 'block';
-            document.getElementById('tableMinuman').style.display = 'none';
-        }
+        {{-- Modal Edit --}}
+        <div class="modal-overlay" id="editModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="modal-back-btn" onclick="closeEditModal()"><i class="fas fa-arrow-left"></i></button>
+                    <h3 class="modal-title" id="editModalTitle">Edit Bahan Baku</h3>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="form-group">
+                            <label class="form-label" id="editCodeLabel">Kode Bahan</label>
+                            <input type="text" class="form-input" id="editCode" name="kode_bahan" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" id="editNameLabel">Nama Bahan</label>
+                            <input type="text" class="form-input" id="editName" name="nama_bahan_baku" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" id="editStokLabel">QTY</label>
+                            <input type="number" class="form-input" id="editStok" name="stok" min="0" required>
+                        </div>
+                        <div class="form-group" id="editHargaGroup">
+                            <label class="form-label">Harga</label>
+                            <input type="number" class="form-input" id="editHarga" name="harga" min="0">
+                        </div>
+                        <button type="submit" class="modal-submit-btn">SIMPAN</button>
+                    </form>
+                    <form id="deleteForm" method="POST" style="margin-top: 10px;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="modal-submit-btn" style="background-color: crimson;"
+                            onclick="return confirm('Yakin ingin menghapus item ini?')">HAPUS</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-        function showMinuman() {
-            document.getElementById('tableSeblak').style.display = 'none';
-            document.getElementById('tableMinuman').style.display = 'block';
-        }
-    function openAddMaterialModal() {
-        document.getElementById('addMaterialModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
+        {{-- Script --}}
+        <script>
+            let currentTable = 'seblak'; // Track which table is currently active
 
-    function closeAddMaterialModal() {
-        document.getElementById('addMaterialModal').classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
+            function showTable(type) {
+                document.getElementById('btnShowSeblak').classList.remove('active');
+                document.getElementById('btnShowMinuman').classList.remove('active');
 
-    function openEditMaterialModal(button) {
-        const kode = button.getAttribute("data-kode");
-        const nama = button.getAttribute("data-nama");
-        const stok = button.getAttribute("data-stok");
+                // Ambil elemen header dan row container
+                let headerElementSeblak = document.querySelector('#tableSeblak .table-header');
+                let rowsContainerSeblak = document.getElementById('seblakTableContent');
+                let headerElementMinuman = document.querySelector('#tableMinuman .table-header');
+                let rowsContainerMinuman = document.getElementById('minumanTableContent');
 
-        document.getElementById("editMaterialCode").value = kode;
-        document.getElementById("editMaterialName").value = nama;
-        document.getElementById("editMaterialQty").value = stok;
+                // Ambil semua div kolom di header dan row masing-masing tabel
+                const seblakHeaderCols = headerElementSeblak.querySelectorAll('div');
+                const minumanHeaderCols = headerElementMinuman.querySelectorAll('div');
 
-        document.getElementById("editMaterialForm").action = "/bahan-baku/" + kode;
-        document.getElementById("deleteMaterialForm").action = "/bahan-baku/" + kode;
-
-        document.getElementById("editMaterialModal").style.display = "flex";
-        document.body.style.overflow = "hidden";
-    }
+                const allSeblakRows = document.querySelectorAll('#seblakTableContent .table-row');
+                const allMinumanRows = document.querySelectorAll('#minumanTableContent .table-row');
 
 
-    function closeEditMaterialModal() {
-        document.getElementById("editMaterialModal").style.display = "none";
-        document.body.style.overflow = 'auto';
-    }
-    
-    // Escape modal
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeAddMaterialModal();
-            closeEditMaterialModal();
-        }
-    });
+                if (type === 'seblak') {
+                    document.getElementById('tableSeblak').style.display = 'block';
+                    document.getElementById('tableMinuman').style.display = 'none';
+                    document.getElementById('btnShowSeblak').classList.add('active');
 
-    // Search filter
-    document.getElementById('searchInput').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('.table-row');
-        rows.forEach(row => {
-            const code = row.querySelector('.material-code').textContent.toLowerCase();
-            const name = row.querySelector('.material-name').textContent.toLowerCase();
-            row.style.display = code.includes(searchTerm) || name.includes(searchTerm) ? 'grid' : 'none';
-        });
-    });
-    </script>
+                    // Atur display untuk kolom Harga di header seblak
+                    seblakHeaderCols[3].style.display = 'block'; // Harga
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                    // Atur display untuk kolom Harga di setiap baris seblak
+                    allSeblakRows.forEach(row => {
+                        row.querySelector('.material-price').style.display = 'block'; // Harga
+                    });
+
+                    // Set form fields for Seblak (Tambah)
+                    document.getElementById('addModalTitle').textContent = 'Tambah Bahan Baku';
+                    document.getElementById('addCodeLabel').textContent = 'Kode Bahan';
+                    document.getElementById('addCode').name = 'kode_bahan';
+                    document.getElementById('addNameLabel').textContent = 'Nama Bahan';
+                    document.getElementById('addName').name = 'nama_bahan_baku';
+                    document.getElementById('addStokLabel').textContent = 'QTY';
+                    document.getElementById('addStok').name = 'stok';
+                    document.getElementById('addHargaGroup').style.display = 'block'; // Tampilkan harga untuk bahan baku
+                    document.getElementById('addHarga').setAttribute('required', 'required');
+                    document.getElementById('addHarga').name = 'harga';
+                    document.getElementById('addForm').action = "{{ url('/bahan-baku') }}";
+
+                    currentTable = 'seblak';
+                } else if (type === 'minuman') {
+                    document.getElementById('tableSeblak').style.display = 'none';
+                    document.getElementById('tableMinuman').style.display = 'block';
+                    document.getElementById('btnShowMinuman').classList.add('active');
+
+                    // Semua kolom di tabel minuman akan selalu terlihat (5 kolom)
+                    // Ini tidak perlu manipulasi display di sini karena mereka semua ada
+
+                    // Set form fields for Minuman (Tambah)
+                    document.getElementById('addModalTitle').textContent = 'Tambah Menu Minuman';
+                    document.getElementById('addCodeLabel').textContent = 'Kode Menu';
+                    document.getElementById('addCode').name = 'kode_menu';
+                    document.getElementById('addNameLabel').textContent = 'Nama Menu';
+                    document.getElementById('addName').name = 'nama_menu';
+                    document.getElementById('addStokLabel').textContent = 'Stok';
+                    document.getElementById('addStok').name = 'stok';
+                    document.getElementById('addHargaGroup').style.display = 'block';
+                    document.getElementById('addHarga').setAttribute('required', 'required');
+                    document.getElementById('addHarga').name = 'harga';
+                    document.getElementById('addForm').action = "{{ url('/menu-minuman') }}";
+
+                    currentTable = 'minuman';
+                }
+                document.getElementById('searchInput').value = '';
+                filterTableRows('');
+            }
+
+            function openAddModal() {
+                document.getElementById('addForm').reset();
+                document.getElementById('addCode').readOnly = false;
+                document.getElementById('addHarga').value = '';
+                document.getElementById('addStok').value = '';
+                showTable(currentTable);
+                document.getElementById('addModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeAddModal() {
+                document.getElementById('addModal').classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+
+            function openEditModal(button) {
+                const type = button.getAttribute("data-type");
+                const kode = button.getAttribute("data-kode");
+                const nama = button.getAttribute("data-nama");
+                const stok = button.getAttribute("data-stok");
+                const harga = button.getAttribute("data-harga");
+
+                document.getElementById("editCode").value = kode;
+                document.getElementById("editStok").value = stok;
+                document.getElementById("editHarga").value = harga;
+
+                document.getElementById("deleteForm").action = (type === 'bahan_baku' ? "{{ url('/bahan-baku') }}/" :
+                    "{{ url('/menu-minuman') }}/") + kode;
+
+                if (type === 'bahan_baku') {
+                    document.getElementById('editModalTitle').textContent = 'Edit Bahan Baku';
+                    document.getElementById('editCodeLabel').textContent = 'Kode Bahan';
+                    document.getElementById('editCode').name = 'kode_bahan';
+                    document.getElementById('editNameLabel').textContent = 'Nama Bahan';
+                    document.getElementById('editName').name = 'nama_bahan_baku';
+                    document.getElementById('editName').value = nama;
+                    document.getElementById('editStokLabel').textContent = 'QTY';
+                    document.getElementById('editStok').name = 'stok';
+                    document.getElementById('editHargaGroup').style.display = 'block';
+                    document.getElementById('editHarga').setAttribute('required', 'required');
+                    document.getElementById('editHarga').name = 'harga';
+                    document.getElementById("editForm").action = "{{ url('/bahan-baku') }}/" + kode;
+                } else if (type === 'menu') {
+                    document.getElementById('editModalTitle').textContent = 'Edit Menu Minuman';
+                    document.getElementById('editCodeLabel').textContent = 'Kode Menu';
+                    document.getElementById('editCode').name = 'kode_menu';
+                    document.getElementById('editNameLabel').textContent = 'Nama Menu';
+                    document.getElementById('editName').name = 'nama_menu';
+                    document.getElementById('editName').value = nama;
+                    document.getElementById('editStokLabel').textContent = 'Stok';
+                    document.getElementById('editStok').name = 'stok';
+                    document.getElementById('editHargaGroup').style.display = 'block';
+                    document.getElementById('editHarga').value = harga;
+                    document.getElementById('editHarga').setAttribute('required', 'required');
+                    document.getElementById('editHarga').name = 'harga';
+                    document.getElementById("editForm").action = "{{ url('/menu-minuman') }}/" + kode;
+                }
+
+                document.getElementById("editModal").classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+
+
+            function closeEditModal() {
+                document.getElementById("editModal").classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+
+            // Escape modal
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeAddModal();
+                    closeEditModal();
+                }
+            });
+
+            // Search filter logic
+            document.getElementById('searchInput').addEventListener('input', function (e) {
+                filterTableRows(e.target.value.toLowerCase());
+            });
+
+            function filterTableRows(searchTerm) {
+                let rows;
+                let currentTableContentId;
+                if (currentTable === 'seblak') {
+                    currentTableContentId = 'seblakTableContent';
+                } else if (currentTable === 'minuman') {
+                    currentTableContentId = 'minumanTableContent';
+                }
+                rows = document.querySelectorAll(`#${currentTableContentId} .table-row`);
+
+                rows.forEach(row => {
+                    const code = row.querySelector('.material-code').textContent.toLowerCase();
+                    const name = row.querySelector('.material-name').textContent.toLowerCase();
+
+                    const qtyOrStok = row.querySelector('.material-qty').textContent.toLowerCase();
+
+                    let price = '';
+                    if (row.querySelector('.material-price')) {
+                        price = row.querySelector('.material-price').textContent.toLowerCase();
+                    }
+
+                    const searchableContent = [code, name, qtyOrStok];
+                    if (price) searchableContent.push(price);
+
+                    const display = searchableContent.some(text => text.includes(searchTerm));
+                    row.style.display = display ? 'grid' : 'none';
+                });
+            }
+
+            // Initialize table display and button active state on page load
+            document.addEventListener('DOMContentLoaded', () => {
+                showTable('seblak'); // Default to seblak table
+            });
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             @if(session('success'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil',
-                    text: '{{ session('success') }}',
+                    text: '{{ session('
+                success ') }}',
                     confirmButtonColor: '#8B1538'
                 });
             @elseif(session('error'))
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal',
-                    text: '{{ session('error') }}',
+                    text: '{{ session('
+                error ') }}',
                     confirmButtonColor: '#8B1538'
                 });
             @endif
         </script>
 
 </body>
+
 </html>

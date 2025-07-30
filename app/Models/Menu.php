@@ -19,11 +19,13 @@ class Menu extends Model
         'kode_menu',
         'nama_menu',
         'harga',
+        'stok',
         'bahan_baku',
         'kode_bahan'
     ];
 
     protected $casts = [
+        'stok' => 'integer',
         'harga' => 'integer',
     ];
 }

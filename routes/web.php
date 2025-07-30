@@ -7,9 +7,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\LaporanController;
+use Illuminate\Http\Request; // Import Request untuk fungsi anonim di rute pembayaran
 
 // Redirect root ke login
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', fn() => redirect()->route('login'));
 
 // Authentication
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -23,18 +24,24 @@ Route::middleware('auth:pelayan')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /**
-     * Orders (Pesanan)
+     * Orders (Pesanan) & Menu Management
      */
+    // Halaman utama pemesanan (menampilkan daftar menu)
     Route::get('/modules/orders', [OrderController::class, 'index'])->name('orders.index');
 
+    // Rute resource untuk manajemen Menu (minuman)
+    // Ini menangani POST (store), PUT (update), DELETE (destroy) untuk item menu
     Route::resource('/modules/orders', OrderController::class)
-        ->only(['store', 'update'])
+        ->only(['store', 'update', 'destroy']) // Tambahkan 'destroy' agar fungsi hapus menu bekerja
         ->parameters(['orders' => 'kode_menu']);
 
-    // AJAX search
-    Route::get('/modules/orders/search', [OrderController::class, 'search'])->name('orders.search');
+    // Rute baru untuk pencarian menu minuman (dari model Menu)
+    Route::get('/modules/orders/search-menu', [OrderController::class, 'searchMenu'])->name('orders.search_menu');
 
-    // Proses order
+    // Rute baru untuk pencarian bahan baku (dari model BahanBaku)
+    Route::get('/modules/orders/search-bahan', [OrderController::class, 'searchBahan'])->name('orders.search_bahan');
+
+    // Proses order (checkout dari keranjang)
     Route::post('/modules/orders/process', [OrderController::class, 'processOrder'])->name('orders.process');
 
     // Riwayat dan detail order
@@ -43,13 +50,15 @@ Route::middleware('auth:pelayan')->group(function () {
     Route::put('/modules/orders/status/{kodePesanan}', [OrderController::class, 'updateOrderStatus'])->name('orders.updateStatus');
 
     /**
-     * Materials (Bahan Baku)
+     * Materials (Bahan Baku) - Ini adalah rute terpisah untuk manajemen bahan baku
      */
     Route::get('/modules/materials', [BahanBakuController::class, 'index'])->name('materials.index');
     Route::post('/bahan-baku', [BahanBakuController::class, 'store']);
     Route::get('/bahan-baku/get/{kode_bahan}', [BahanBakuController::class, 'getOne']);
     Route::put('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'update']);
     Route::delete('/bahan-baku/{kode_bahan}', [BahanBakuController::class, 'destroy']);
+    // Rute untuk manajemen menu minuman yang mungkin tumpang tindih dengan OrderController
+    // Jika BahanBakuController juga mengelola menu minuman, pertimbangkan untuk mengkonsolidasikannya
     Route::post('/menu-minuman', [BahanBakuController::class, 'storeMinuman']);
     Route::put('/menu-minuman/{kode_menu}', [BahanBakuController::class, 'updateMinuman']);
     Route::delete('/menu-minuman/{kode_menu}', [BahanBakuController::class, 'destroyMinuman']);
@@ -58,6 +67,7 @@ Route::middleware('auth:pelayan')->group(function () {
     /**
      * Payment
      */
+    // Rute untuk menampilkan form pembayaran (dipanggil setelah checkout dari keranjang)
     Route::get('/payment', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
     Route::post('/payment/calculate-change', [PaymentController::class, 'calculateChange'])->name('payment.calculate');
     Route::post('/payment/process', [PaymentController::class, 'processPayment'])->name('payment.process');
@@ -67,4 +77,7 @@ Route::middleware('auth:pelayan')->group(function () {
      * Reports
      */
     Route::get('/modules/reports', [LaporanController::class, 'index'])->name('reports.index');
+    // Jika ada laporan harian di OrderController, tambahkan rutenya di sini
+    Route::get('/modules/daily-report', [OrderController::class, 'dailyOrderReport'])->name('orders.dailyReport');
+
 });

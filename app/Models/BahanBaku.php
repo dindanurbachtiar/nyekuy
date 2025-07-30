@@ -14,7 +14,13 @@ class BahanBaku extends Model
     protected $fillable = [
         'kode_bahan',
         'nama_bahan_baku',
+        'harga',
         'stok'
+    ];
+
+    protected $casts = [
+        'stok' => 'integer',
+        'harga' => 'integer', // [PERBAIKAN] Tambahkan cast untuk harga
     ];
 
     public $timestamps = true; // Gunakan true kalau tabel kamu ada kolom created_at dan updated_at
